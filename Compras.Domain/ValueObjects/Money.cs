@@ -4,8 +4,8 @@ namespace Compras.Domain.ValueObjects;
 
 public sealed class Money
 {
-    public decimal Amount { get; }
-    public string Currency { get; }
+    public decimal Amount { get; private set; }
+    public string Currency { get; private set; }
 
     public Money(decimal amount, string currency)
     {
@@ -21,6 +21,12 @@ public sealed class Money
 
         Amount = amount;
         Currency = currency.Trim().ToUpperInvariant();
+    }
+
+    private Money()
+    {
+        Amount = 0;
+        Currency = "USD";
     }
 
     public Money Add(Money other)

@@ -5,10 +5,10 @@ namespace Compras.Domain.Entities;
 
 public sealed class PurchaseItem
 {
-    public Guid ProductId { get; }
-    public string Name { get; }
-    public Money UnitPrice { get; }
-    public int Quantity { get; }
+    public Guid ProductId { get; private set; }
+    public string Name { get; private set; }
+    public Money UnitPrice { get; private set; }
+    public int Quantity { get; private set; }
 
     public PurchaseItem(Guid productId, string name, Money unitPrice, int quantity)
     {
@@ -31,6 +31,14 @@ public sealed class PurchaseItem
         Name = name.Trim();
         UnitPrice = unitPrice;
         Quantity = quantity;
+    }
+
+    private PurchaseItem()
+    {
+        ProductId = Guid.Empty;
+        Name = string.Empty;
+        UnitPrice = new Money(0, "USD");
+        Quantity = 0;
     }
 
     public Money Total() => UnitPrice.Multiply(Quantity);

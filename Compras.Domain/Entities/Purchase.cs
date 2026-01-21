@@ -7,9 +7,9 @@ public sealed class Purchase
 {
     private readonly List<PurchaseItem> _items = new();
 
-    public Guid Id { get; }
-    public Guid CustomerId { get; }
-    public DateTimeOffset PurchasedAt { get; }
+    public Guid Id { get; private set; }
+    public Guid CustomerId { get; private set; }
+    public DateTimeOffset PurchasedAt { get; private set; }
     public IReadOnlyCollection<PurchaseItem> Items => _items.AsReadOnly();
 
     public Purchase(Guid id, Guid customerId, DateTimeOffset purchasedAt)
@@ -27,6 +27,13 @@ public sealed class Purchase
         Id = id;
         CustomerId = customerId;
         PurchasedAt = purchasedAt;
+    }
+
+    private Purchase()
+    {
+        Id = Guid.Empty;
+        CustomerId = Guid.Empty;
+        PurchasedAt = DateTimeOffset.MinValue;
     }
 
     public void AddItem(PurchaseItem item)
