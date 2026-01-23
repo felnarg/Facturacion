@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Catalogo.Domain\Catalogo.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\Facturacion.Shared\Facturacion.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

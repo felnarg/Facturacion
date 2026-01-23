@@ -1,0 +1,173 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: supermercado-broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=p@ssword123
+    networks:
+      - supermercado-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: supermercado-sql
+    ports:
+      - "14330:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Passw0rd!
+    networks:
+      - supermercado-network
+
+  catalogo-api:
+    image: catalogo-api-img
+    build:
+      context: .
+      dockerfile: Catalogo/Catalogo.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Catalogo;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+    ports:
+      - "8080:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
+  inventario-api:
+    image: inventario-api-img
+    build:
+      context: .
+      dockerfile: Inventario/Inventario.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Inventario;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+      - RabbitMQ__Queue=inventario.events
+    ports:
+      - "8081:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
+  compras-api:
+    image: compras-api-img
+    build:
+      context: .
+      dockerfile: Compras/Compras.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Compras;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+    ports:
+      - "8082:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
+  ventas-api:
+    image: ventas-api-img
+    build:
+      context: .
+      dockerfile: Ventas/Ventas.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Ventas;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+    ports:
+      - "8083:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
+  clientes-api:
+    image: clientes-api-img
+    build:
+      context: .
+      dockerfile: Clientes/Clientes.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Clientes;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+      - RabbitMQ__Queue=clientes.events
+    ports:
+      - "8084:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
+  usuarios-api:
+    image: usuarios-api-img
+    build:
+      context: .
+      dockerfile: Usuarios/Usuarios.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Usuarios;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - Jwt__Key=super-secret-key-change-me-please-32bytes-min
+      - Jwt__Issuer=Facturacion.IAM
+      - Jwt__Audience=Facturacion.Clients
+      - Jwt__ExpirationMinutes=120
+    ports:
+      - "8085:80"
+    depends_on:
+      - sqlserver
+    networks:
+      - supermercado-network
+
+  gateway:
+    image: apigateway-img
+    build:
+      context: ./ApiGateway/ApiGateway
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+    ports:
+      - "5000:80"
+    depends_on:
+      - catalogo-api
+      - inventario-api
+      - compras-api
+      - ventas-api
+      - clientes-api
+      - usuarios-api
+    networks:
+      - supermercado-network
+
+networks:
+  supermercado-network:
+    driver: bridge

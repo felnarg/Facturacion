@@ -1,8 +1,8 @@
 using Catalogo.Application.Abstractions;
 using Catalogo.Application.DTOs;
-using Catalogo.Application.Events;
 using Catalogo.Domain.Entities;
 using Catalogo.Domain.Repositories;
+using Facturacion.Shared.Events;
 
 namespace Catalogo.Application.Services;
 
@@ -34,13 +34,12 @@ public sealed class ProductService : IProductService
         var product = new Product(request.Name, request.Description, request.Price, request.Stock, request.Sku);
         await _repository.AddAsync(product, cancellationToken);
 
-        var createdEvent = new ProductCreatedEvent(
+        var createdEvent = new ProductCreated(
             product.Id,
             product.Name,
-            product.Price,
-            product.Stock,
             product.Sku,
-            DateTime.UtcNow);
+            product.Price,
+            product.Stock);
 
         await _eventBus.PublishAsync(createdEvent, "product.created", cancellationToken);
 
@@ -58,13 +57,12 @@ public sealed class ProductService : IProductService
         product.Update(request.Name, request.Description, request.Price, request.Stock, request.Sku);
         await _repository.UpdateAsync(product, cancellationToken);
 
-        var updatedEvent = new ProductUpdatedEvent(
+        var updatedEvent = new ProductUpdated(
             product.Id,
             product.Name,
-            product.Price,
-            product.Stock,
             product.Sku,
-            DateTime.UtcNow);
+            product.Price,
+            product.Stock);
 
         await _eventBus.PublishAsync(updatedEvent, "product.updated", cancellationToken);
 
@@ -81,7 +79,7 @@ public sealed class ProductService : IProductService
 
         await _repository.DeleteAsync(product, cancellationToken);
 
-        var deletedEvent = new ProductDeletedEvent(product.Id, DateTime.UtcNow);
+        var deletedEvent = new ProductDeleted(product.Id);
         await _eventBus.PublishAsync(deletedEvent, "product.deleted", cancellationToken);
 
         return true;
