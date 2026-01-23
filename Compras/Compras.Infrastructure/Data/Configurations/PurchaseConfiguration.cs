@@ -15,11 +15,22 @@ public sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.Property(purchase => purchase.ProductId)
             .IsRequired();
 
+        builder.Property(purchase => purchase.InternalProductCode)
+            .IsRequired();
+
+        builder.Property(purchase => purchase.ProductName)
+            .HasMaxLength(200)
+            .IsRequired();
+
         builder.Property(purchase => purchase.SupplierId)
             .IsRequired();
 
         builder.Property(purchase => purchase.SupplierName)
             .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(purchase => purchase.SupplierInvoiceNumber)
+            .HasMaxLength(100)
             .IsRequired();
 
         builder.Property(purchase => purchase.Quantity)

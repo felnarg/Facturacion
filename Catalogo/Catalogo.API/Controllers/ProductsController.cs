@@ -16,8 +16,16 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var filtered = await _productService.SearchAsync(search, cancellationToken);
+            return Ok(filtered);
+        }
+
         var products = await _productService.GetAllAsync(cancellationToken);
         return Ok(products);
     }

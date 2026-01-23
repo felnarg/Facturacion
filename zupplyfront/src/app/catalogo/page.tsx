@@ -12,6 +12,8 @@ type Product = {
   price: number;
   stock: number;
   sku: string;
+  supplierProductCode: number;
+  internalProductCode: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -22,6 +24,8 @@ const emptyForm = {
   price: "",
   stock: "",
   sku: "",
+  supplierProductCode: "",
+  internalProductCode: "",
 };
 
 export default function CatalogoPage() {
@@ -30,6 +34,9 @@ export default function CatalogoPage() {
   const [form, setForm] = useState({ ...emptyForm });
   const [editing, setEditing] = useState<Product | null>(null);
   const [error, setError] = useState("");
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
 
   const loadProducts = async () => {
     const data = await apiRequest<Product[]>(
@@ -38,6 +45,20 @@ export default function CatalogoPage() {
       user.token
     );
     setProducts(data);
+  };
+
+  const searchProducts = async (term: string) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const data = await apiRequest<Product[]>(
+      `/api/catalog/products?search=${encodeURIComponent(term)}`,
+      undefined,
+      user.token
+    );
+    setSearchResults(data);
   };
 
   useEffect(() => {
@@ -56,6 +77,8 @@ export default function CatalogoPage() {
       price: Number(form.price),
       stock: Number(form.stock),
       sku: form.sku,
+      supplierProductCode: Number(form.supplierProductCode),
+      internalProductCode: Number(form.internalProductCode),
     };
 
     try {
@@ -95,6 +118,8 @@ export default function CatalogoPage() {
       price: String(product.price),
       stock: String(product.stock),
       sku: product.sku,
+      supplierProductCode: String(product.supplierProductCode),
+      internalProductCode: String(product.internalProductCode),
     });
   };
 
@@ -163,6 +188,32 @@ export default function CatalogoPage() {
             }
             required
           />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="Código proveedor"
+            type="number"
+            value={form.supplierProductCode}
+            onChange={(event) =>
+              setForm((prev) => ({
+                ...prev,
+                supplierProductCode: event.target.value,
+              }))
+            }
+            required
+          />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="Código interno"
+            type="number"
+            value={form.internalProductCode}
+            onChange={(event) =>
+              setForm((prev) => ({
+                ...prev,
+                internalProductCode: event.target.value,
+              }))
+            }
+            required
+          />
           <textarea
             className="md:col-span-2 rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Descripción"
@@ -170,6 +221,14 @@ export default function CatalogoPage() {
             onChange={(event) =>
               setForm((prev) => ({ ...prev, description: event.target.value }))
             }
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                setSearchTerm(form.description);
+                setSearchModalOpen(true);
+                searchProducts(form.description).catch(() => {});
+              }
+            }}
           />
           <div className="md:col-span-2 flex items-center gap-3">
             <button
@@ -202,6 +261,8 @@ export default function CatalogoPage() {
               <tr>
                 <th className="px-4 py-3">Nombre</th>
                 <th className="px-4 py-3">SKU</th>
+                <th className="px-4 py-3">Cod. Prov</th>
+                <th className="px-4 py-3">Cod. Interno</th>
                 <th className="px-4 py-3">Precio</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3"></th>
@@ -212,6 +273,8 @@ export default function CatalogoPage() {
                 <tr key={product.id} className="border-t border-zinc-100">
                   <td className="px-4 py-3">{product.name}</td>
                   <td className="px-4 py-3">{product.sku}</td>
+                  <td className="px-4 py-3">{product.supplierProductCode}</td>
+                  <td className="px-4 py-3">{product.internalProductCode}</td>
                   <td className="px-4 py-3">{product.price}</td>
                   <td className="px-4 py-3">{product.stock}</td>
                   <td className="px-4 py-3 text-right">
@@ -233,7 +296,7 @@ export default function CatalogoPage() {
               {products.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={7}
                     className="px-4 py-6 text-center text-sm text-zinc-500"
                   >
                     No hay productos registrados.
@@ -243,6 +306,75 @@ export default function CatalogoPage() {
             </tbody>
           </table>
         </div>
+
+        {searchModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-3xl rounded-xl bg-white p-4 shadow-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-zinc-800">
+                  Buscar producto
+                </h3>
+                <button
+                  onClick={() => setSearchModalOpen(false)}
+                  className="text-xs text-zinc-500"
+                >
+                  Cerrar
+                </button>
+              </div>
+
+              <div className="mt-3">
+                <input
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                  placeholder="Busca por nombre, SKU, códigos o descripción"
+                  value={searchTerm}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setSearchTerm(value);
+                    searchProducts(value).catch(() => {});
+                  }}
+                />
+              </div>
+
+              <div className="mt-4 max-h-72 overflow-auto rounded-md border border-zinc-100">
+                {searchResults.map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => {
+                      setForm({
+                        name: product.name,
+                        description: product.description,
+                        price: String(product.price),
+                        stock: String(product.stock),
+                        sku: product.sku,
+                        supplierProductCode: String(product.supplierProductCode),
+                        internalProductCode: String(product.internalProductCode),
+                      });
+                      setEditing(product);
+                      setSearchModalOpen(false);
+                    }}
+                    className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
+                  >
+                    <span className="font-medium text-zinc-900">
+                      {product.name} ({product.sku})
+                    </span>
+                    <span className="text-xs text-zinc-500">
+                      Prov: {product.supplierProductCode} · Interno:{" "}
+                      {product.internalProductCode}
+                    </span>
+                    <span className="text-xs text-zinc-400">
+                      {product.description}
+                    </span>
+                  </button>
+                ))}
+                {searchResults.length === 0 && (
+                  <div className="px-3 py-6 text-center text-xs text-zinc-500">
+                    No hay resultados.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Protected>
   );

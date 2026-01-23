@@ -44,9 +44,12 @@ public sealed class PurchaseService : IPurchaseService
 
         var purchase = new Purchase(
             request.ProductId,
+            request.InternalProductCode,
+            request.ProductName,
             request.Quantity,
             supplier.Id,
-            supplier.Name);
+            supplier.Name,
+            request.SupplierInvoiceNumber);
         await _repository.AddAsync(purchase, cancellationToken);
         return Map(purchase);
     }
@@ -73,9 +76,12 @@ public sealed class PurchaseService : IPurchaseService
         return new PurchaseDto(
             purchase.Id,
             purchase.ProductId,
+            purchase.InternalProductCode,
+            purchase.ProductName,
             purchase.SupplierId,
             purchase.Quantity,
             purchase.SupplierName,
+            purchase.SupplierInvoiceNumber,
             purchase.Status,
             purchase.CreatedAt,
             purchase.ReceivedAt);

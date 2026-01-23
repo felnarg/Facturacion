@@ -23,6 +23,12 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasMaxLength(50)
             .IsRequired();
 
+        builder.Property(product => product.SupplierProductCode)
+            .IsRequired();
+
+        builder.Property(product => product.InternalProductCode)
+            .IsRequired();
+
         builder.Property(product => product.Price)
             .HasColumnType("decimal(18,2)")
             .IsRequired();
@@ -46,6 +52,8 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Price = 19.99m,
                 Stock = 100,
                 Sku = "SKU-BASE-001",
+                SupplierProductCode = 11001,
+                InternalProductCode = 50001,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             },
@@ -57,6 +65,8 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Price = 79.99m,
                 Stock = 50,
                 Sku = "SKU-PREM-002",
+                SupplierProductCode = 11002,
+                InternalProductCode = 50002,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             });

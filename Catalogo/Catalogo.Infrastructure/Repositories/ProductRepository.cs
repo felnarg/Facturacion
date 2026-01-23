@@ -20,10 +20,24 @@ public sealed class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(product => product.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Product>> GetAllAsync(
+        string? search,
+        CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products.AsNoTracking()
-            .OrderBy(product => product.Name)
+        var query = _dbContext.Products.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(product =>
+                product.Name.ToLower().Contains(term) ||
+                product.Description.ToLower().Contains(term) ||
+                product.Sku.ToLower().Contains(term) ||
+                product.SupplierProductCode.ToString().Contains(term) ||
+                product.InternalProductCode.ToString().Contains(term));
+        }
+
+        return await query.OrderBy(product => product.Name)
             .ToListAsync(cancellationToken);
     }
 

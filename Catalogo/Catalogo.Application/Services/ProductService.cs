@@ -25,13 +25,28 @@ public sealed class ProductService : IProductService
 
     public async Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var products = await _repository.GetAllAsync(cancellationToken);
+        var products = await _repository.GetAllAsync(null, cancellationToken);
+        return products.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<ProductDto>> SearchAsync(
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var products = await _repository.GetAllAsync(search, cancellationToken);
         return products.Select(Map).ToList();
     }
 
     public async Task<ProductDto> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
     {
-        var product = new Product(request.Name, request.Description, request.Price, request.Stock, request.Sku);
+        var product = new Product(
+            request.Name,
+            request.Description,
+            request.Price,
+            request.Stock,
+            request.Sku,
+            request.SupplierProductCode,
+            request.InternalProductCode);
         await _repository.AddAsync(product, cancellationToken);
 
         var createdEvent = new ProductCreated(
@@ -54,7 +69,14 @@ public sealed class ProductService : IProductService
             return null;
         }
 
-        product.Update(request.Name, request.Description, request.Price, request.Stock, request.Sku);
+        product.Update(
+            request.Name,
+            request.Description,
+            request.Price,
+            request.Stock,
+            request.Sku,
+            request.SupplierProductCode,
+            request.InternalProductCode);
         await _repository.UpdateAsync(product, cancellationToken);
 
         var updatedEvent = new ProductUpdated(
@@ -94,6 +116,8 @@ public sealed class ProductService : IProductService
             product.Price,
             product.Stock,
             product.Sku,
+            product.SupplierProductCode,
+            product.InternalProductCode,
             product.CreatedAt,
             product.UpdatedAt);
     }
