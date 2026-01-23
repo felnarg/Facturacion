@@ -95,7 +95,7 @@ export default function UsuariosPage() {
             required
           />
           <div className="md:col-span-3">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white">
+            <button className="btn-primary">
               Crear usuario
             </button>
           </div>

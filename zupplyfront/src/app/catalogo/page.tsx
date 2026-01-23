@@ -231,10 +231,7 @@ export default function CatalogoPage() {
             }}
           />
           <div className="md:col-span-2 flex items-center gap-3">
-            <button
-              type="submit"
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white"
-            >
+            <button type="submit" className="btn-primary">
               {editing ? "Actualizar" : "Crear"}
             </button>
             {editing && (
@@ -244,7 +241,7 @@ export default function CatalogoPage() {
                   setEditing(null);
                   setForm({ ...emptyForm });
                 }}
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm"
+                className="btn-secondary"
               >
                 Cancelar
               </button>
@@ -316,7 +313,7 @@ export default function CatalogoPage() {
                 </h3>
                 <button
                   onClick={() => setSearchModalOpen(false)}
-                  className="text-xs text-zinc-500"
+                  className="btn-secondary text-xs"
                 >
                   Cerrar
                 </button>

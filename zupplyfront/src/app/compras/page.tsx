@@ -45,6 +45,7 @@ type PurchaseItem = {
   productName: string;
   quantity: number;
   cost: number;
+  salePercent: number;
 };
 
 export default function ComprasPage() {
@@ -59,6 +60,7 @@ export default function ComprasPage() {
     productName: "",
     quantity: "",
     cost: "",
+    salePercent: "",
     supplierId: "",
     supplierName: "",
     supplierInvoiceNumber: "",
@@ -202,8 +204,17 @@ export default function ComprasPage() {
 
     const quantity = Number(form.quantity);
     const cost = Number(form.cost);
-    if (!quantity || quantity <= 0 || !cost || cost <= 0) {
-      setError("Cantidad y costo deben ser mayores a cero.");
+    const salePercent = Number(form.salePercent);
+    if (
+      !quantity ||
+      quantity <= 0 ||
+      !cost ||
+      cost <= 0 ||
+      !salePercent ||
+      salePercent < 1 ||
+      salePercent > 100
+    ) {
+      setError("Cantidad, costo y % venta deben ser válidos.");
       return;
     }
 
@@ -215,6 +226,7 @@ export default function ComprasPage() {
         productName: form.productName,
         quantity,
         cost,
+        salePercent,
       },
     ]);
 
@@ -225,6 +237,7 @@ export default function ComprasPage() {
       productName: "",
       quantity: "",
       cost: "",
+      salePercent: "",
     }));
   };
 
@@ -249,9 +262,9 @@ export default function ComprasPage() {
 
         <form
           onSubmit={handleCreate}
-          className="grid gap-3 rounded-xl bg-white p-4 shadow-sm"
+          className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm"
         >
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid w-full gap-3 md:grid-cols-2">
             <div className="flex items-center gap-2">
               <input
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
@@ -263,7 +276,7 @@ export default function ComprasPage() {
               <button
                 type="button"
                 onClick={() => setSupplierModalOpen(true)}
-                className="rounded-md border border-zinc-300 px-3 py-2 text-xs"
+                className="btn-secondary text-xs"
               >
                 Seleccionar
               </button>
@@ -283,7 +296,7 @@ export default function ComprasPage() {
               />
               <button
                 type="button"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-xs"
+                className="btn-secondary text-xs"
                 onClick={() => setSupplierModalOpen(true)}
               >
                 Factura
@@ -291,8 +304,8 @@ export default function ComprasPage() {
             </div>
           </div>
 
-          <div className="form-row-scroll">
-            <div className="form-row-horizontal min-w-[960px]">
+          <div className="form-row-scroll w-full">
+            <div className="form-row-grid min-w-[1100px]">
               <input
                 className="min-w-[180px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="Código interno"
@@ -401,14 +414,36 @@ export default function ComprasPage() {
               <input
                 className="min-w-[120px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="% venta"
-                value=""
-                readOnly
+                type="number"
+                min={1}
+                max={100}
+                value={form.salePercent}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    salePercent: event.target.value,
+                  }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddItem();
+                  }
+                }}
+                required
               />
             </div>
           </div>
           <div className="md:col-span-3">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white">
+            <button className="btn-primary">
               Registrar compra
+            </button>
+            <button
+              type="button"
+              onClick={handleAddItem}
+              className="btn-secondary ml-3"
+            >
+              Agregar producto
             </button>
           </div>
           {error && (
@@ -430,6 +465,7 @@ export default function ComprasPage() {
                   <th className="px-3 py-2">Costo</th>
                   <th className="px-3 py-2">Valor</th>
                   <th className="px-3 py-2">Total</th>
+                  <th className="px-3 py-2">% Venta</th>
                 </tr>
               </thead>
               <tbody>
@@ -437,7 +473,10 @@ export default function ComprasPage() {
                   const valor = item.cost * (1 + IVA);
                   const total = valor * item.quantity;
                   return (
-                    <tr key={`${item.productId}-${index}`} className="border-t">
+                    <tr
+                      key={`${item.productId}-${index}`}
+                      className="border-t text-zinc-800"
+                    >
                       <td className="px-3 py-2">{item.productName}</td>
                       <td className="px-3 py-2">
                         {item.internalProductCode}
@@ -446,13 +485,14 @@ export default function ComprasPage() {
                       <td className="px-3 py-2">{item.cost.toFixed(2)}</td>
                       <td className="px-3 py-2">{valor.toFixed(2)}</td>
                       <td className="px-3 py-2">{total.toFixed(2)}</td>
+                      <td className="px-3 py-2">{item.salePercent}%</td>
                     </tr>
                   );
                 })}
                 {items.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-3 py-6 text-center text-xs text-zinc-500"
                     >
                       Aún no has agregado productos.
@@ -521,7 +561,7 @@ export default function ComprasPage() {
                 </h3>
                 <button
                   onClick={() => setSupplierModalOpen(false)}
-                  className="text-xs text-zinc-500"
+                  className="btn-secondary text-xs"
                 >
                   Cerrar
                 </button>
@@ -581,7 +621,7 @@ export default function ComprasPage() {
                 </h3>
                 <button
                   onClick={() => setProductModalOpen(false)}
-                  className="text-xs text-zinc-500"
+                  className="btn-secondary text-xs"
                 >
                   Cerrar
                 </button>

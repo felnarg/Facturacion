@@ -98,10 +98,7 @@ export default function VentasPage() {
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
             />
-            <button
-              onClick={addItem}
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm"
-            >
+            <button onClick={addItem} className="btn-secondary">
               Agregar item
             </button>
           </div>
@@ -123,7 +120,7 @@ export default function VentasPage() {
 
           <button
             onClick={handleCreateSale}
-            className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-sm text-white"
+            className="btn-primary mt-4"
             disabled={items.length === 0}
           >
             Registrar venta

@@ -96,7 +96,7 @@ export default function InventarioPage() {
             <option value="decrease">Disminuir</option>
           </select>
           <div className="md:col-span-3">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white">
+            <button className="btn-primary">
               Aplicar ajuste
             </button>
           </div>

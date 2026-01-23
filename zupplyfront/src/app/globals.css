@@ -35,3 +35,69 @@ input::placeholder,
 textarea::placeholder {
   color: #6b7280;
 }
+
+.btn-primary {
+  background-color: #111827;
+  color: #ffffff;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background-color: #1f2937;
+}
+
+.btn-secondary {
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #f9fafb;
+}
+
+.btn-secondary:hover {
+  background-color: #f3f4f6;
+}
+.form-row-scroll {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.form-row-horizontal {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-row-horizontal input,
+.form-row-horizontal select {
+  flex: 0 0 auto;
+}
+
+.form-row-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(140px, max-content);
+  gap: 12px;
+  align-items: center;
+}
+
+.form-row-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.form-row-scroll::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 9999px;
+}
+
+.form-row-scroll::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 9999px;
+}

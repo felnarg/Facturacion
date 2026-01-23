@@ -89,7 +89,7 @@ export default function LoginPage() {
             className={`rounded-full px-3 py-1 ${
               mode === "login"
                 ? "bg-zinc-900 text-white"
-                : "bg-zinc-100 text-zinc-600"
+                : "bg-zinc-100 text-zinc-700"
             }`}
           >
             Login
@@ -100,7 +100,7 @@ export default function LoginPage() {
             className={`rounded-full px-3 py-1 ${
               mode === "register"
                 ? "bg-zinc-900 text-white"
-                : "bg-zinc-100 text-zinc-600"
+                : "bg-zinc-100 text-zinc-700"
             }`}
           >
             Registro
@@ -176,7 +176,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="btn-primary w-full"
           >
             {loading
               ? "Procesando..."

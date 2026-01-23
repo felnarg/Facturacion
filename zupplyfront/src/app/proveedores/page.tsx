@@ -190,7 +190,7 @@ export default function ProveedoresPage() {
             }
           />
           <div className="md:col-span-2 flex items-center gap-3">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white">
+            <button className="btn-primary">
               {editing ? "Actualizar" : "Crear"}
             </button>
             {editing && (
@@ -200,7 +200,7 @@ export default function ProveedoresPage() {
                   setEditing(null);
                   setForm({ ...emptyForm });
                 }}
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm"
+                className="btn-secondary"
               >
                 Cancelar
               </button>
