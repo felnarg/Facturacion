@@ -22,7 +22,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Usuarios", href: "/usuarios", permission: "usuarios" },
 ];
 
-export function Nav() {
+type NavProps = {
+  onNavigate?: () => void;
+};
+
+export function Nav({ onNavigate }: NavProps) {
   const pathname = usePathname();
   const { permissions, isAuthenticated, logout, user } = useAuth();
 
@@ -42,6 +46,7 @@ export function Nav() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={`rounded-md px-3 py-2 ${
                 active
                   ? "bg-zinc-900 text-white"
@@ -61,7 +66,10 @@ export function Nav() {
               Sesión: <strong>{user.email ?? "usuario"}</strong>
             </span>
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                onNavigate?.();
+              }}
               className="rounded-md border border-zinc-300 px-2 py-1 text-zinc-700 hover:bg-zinc-100"
             >
               Cerrar sesión
@@ -70,6 +78,7 @@ export function Nav() {
         ) : (
           <Link
             href="/login"
+            onClick={onNavigate}
             className="inline-flex items-center justify-center rounded-md border border-zinc-300 px-2 py-1 hover:bg-zinc-100"
           >
             Iniciar sesión
