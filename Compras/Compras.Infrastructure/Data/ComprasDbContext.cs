@@ -11,6 +11,7 @@ public sealed class ComprasDbContext : DbContext
     }
 
     public DbSet<Purchase> Purchases => Set<Purchase>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

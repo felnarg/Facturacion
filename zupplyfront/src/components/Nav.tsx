@@ -16,6 +16,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Catálogo", href: "/catalogo", permission: "catalogo" },
   { label: "Inventario", href: "/inventario", permission: "inventario" },
   { label: "Compras", href: "/compras", permission: "compras" },
+  { label: "Proveedores", href: "/proveedores", permission: "compras" },
   { label: "Ventas", href: "/ventas", permission: "ventas" },
   { label: "Clientes", href: "/clientes", permission: "clientes" },
   { label: "Usuarios", href: "/usuarios", permission: "usuarios" },

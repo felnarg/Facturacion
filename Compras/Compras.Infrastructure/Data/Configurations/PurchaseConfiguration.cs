@@ -15,6 +15,9 @@ public sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.Property(purchase => purchase.ProductId)
             .IsRequired();
 
+        builder.Property(purchase => purchase.SupplierId)
+            .IsRequired();
+
         builder.Property(purchase => purchase.SupplierName)
             .HasMaxLength(200)
             .IsRequired();

@@ -19,6 +19,7 @@ public static class DependencyInjection
                 sqlOptions => sqlOptions.MigrationsAssembly("Compras.API")));
 
         services.AddScoped<IPurchaseRepository, PurchaseRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMQ"));
         services.AddSingleton<IEventBus, RabbitMqEventBus>();

@@ -5,6 +5,7 @@ public class Purchase
     public Guid Id { get; private set; }
     public Guid ProductId { get; private set; }
     public int Quantity { get; private set; }
+    public Guid SupplierId { get; private set; }
     public string SupplierName { get; private set; } = string.Empty;
     public string Status { get; private set; } = "Pending";
     public DateTime CreatedAt { get; private set; }
@@ -14,7 +15,7 @@ public class Purchase
     {
     }
 
-    public Purchase(Guid productId, int quantity, string supplierName)
+    public Purchase(Guid productId, int quantity, Guid supplierId, string supplierName)
     {
         if (quantity <= 0)
         {
@@ -29,6 +30,7 @@ public class Purchase
         Id = Guid.NewGuid();
         ProductId = productId;
         Quantity = quantity;
+        SupplierId = supplierId;
         SupplierName = supplierName.Trim();
         CreatedAt = DateTime.UtcNow;
     }
