@@ -39,16 +39,26 @@ type Product = {
   internalProductCode: number;
 };
 
+type PurchaseItem = {
+  productId: string;
+  internalProductCode: number;
+  productName: string;
+  quantity: number;
+  cost: number;
+};
+
 export default function ComprasPage() {
   const { user } = useAuth();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [items, setItems] = useState<PurchaseItem[]>([]);
   const [form, setForm] = useState({
     productId: "",
     internalProductCode: "",
     productName: "",
     quantity: "",
+    cost: "",
     supplierId: "",
     supplierName: "",
     supplierInvoiceNumber: "",
@@ -58,6 +68,7 @@ export default function ComprasPage() {
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
+  const IVA = 0.19;
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -144,34 +155,77 @@ export default function ComprasPage() {
     setError("");
 
     try {
-      await apiRequest<Purchase>(
-        "/api/purchases",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            productId: form.productId,
-            internalProductCode: Number(form.internalProductCode),
-            productName: form.productName,
-            quantity: Number(form.quantity),
-            supplierId: form.supplierId,
-            supplierInvoiceNumber: form.supplierInvoiceNumber,
-          }),
-        },
-        user.token
-      );
+      if (items.length === 0) {
+        setError("Debes agregar al menos un producto.");
+        return;
+      }
+
+      for (const item of items) {
+        await apiRequest<Purchase>(
+          "/api/purchases",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              productId: item.productId,
+              internalProductCode: item.internalProductCode,
+              productName: item.productName,
+              quantity: item.quantity,
+              supplierId: form.supplierId,
+              supplierInvoiceNumber: form.supplierInvoiceNumber,
+            }),
+          },
+          user.token
+        );
+      }
       setForm({
         productId: "",
         internalProductCode: "",
         productName: "",
         quantity: "",
+        cost: "",
         supplierId: "",
         supplierName: "",
         supplierInvoiceNumber: "",
       });
+      setItems([]);
       await loadPurchases();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creando compra");
     }
+  };
+
+  const handleAddItem = () => {
+    if (!form.productId || !form.internalProductCode || !form.productName) {
+      setError("Debes seleccionar un producto válido.");
+      return;
+    }
+
+    const quantity = Number(form.quantity);
+    const cost = Number(form.cost);
+    if (!quantity || quantity <= 0 || !cost || cost <= 0) {
+      setError("Cantidad y costo deben ser mayores a cero.");
+      return;
+    }
+
+    setItems((prev) => [
+      ...prev,
+      {
+        productId: form.productId,
+        internalProductCode: Number(form.internalProductCode),
+        productName: form.productName,
+        quantity,
+        cost,
+      },
+    ]);
+
+    setForm((prev) => ({
+      ...prev,
+      productId: "",
+      internalProductCode: "",
+      productName: "",
+      quantity: "",
+      cost: "",
+    }));
   };
 
   const markReceived = async (id: string) => {
@@ -237,82 +291,178 @@ export default function ComprasPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-              placeholder="Código interno"
-              value={form.internalProductCode}
-            onChange={(event) =>
-                setForm((prev) => ({
-                  ...prev,
-                  internalProductCode: event.target.value,
-                }))
-              }
-              onKeyDown={async (event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  const term = form.internalProductCode.trim();
-                  if (!term) {
-                    return;
+          <div className="w-full overflow-x-auto">
+            <div className="flex min-w-[960px] items-center gap-3">
+              <input
+                className="min-w-[180px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="Código interno"
+                value={form.internalProductCode}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    internalProductCode: event.target.value,
+                  }))
+                }
+                onKeyDown={async (event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    const term = form.internalProductCode.trim();
+                    if (!term) {
+                      return;
+                    }
+                    const result = await loadProducts(term);
+                    const exact = result.find(
+                      (product) => String(product.internalProductCode) === term
+                    );
+                    if (exact) {
+                      setForm((prev) => ({
+                        ...prev,
+                        productId: exact.id,
+                        productName: exact.name,
+                      }));
+                    } else {
+                      setProductSearch(term);
+                      setProductModalOpen(true);
+                    }
                   }
-                  const result = await loadProducts(term);
-                  const exact = result.find(
-                    (product) => String(product.internalProductCode) === term
-                  );
-                  if (exact) {
-                    setForm((prev) => ({
-                      ...prev,
-                      productId: exact.id,
-                      productName: exact.name,
-                    }));
-                  } else {
-                    setProductSearch(term);
+                }}
+                required
+              />
+              <input
+                className="min-w-[220px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="Nombre producto"
+                value={form.productName}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    productName: event.target.value,
+                  }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    setProductSearch(form.productName);
                     setProductModalOpen(true);
+                    loadProducts(form.productName).catch(() => {});
                   }
+                }}
+                required
+              />
+              <input
+                className="min-w-[120px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="Cantidad"
+                type="number"
+                value={form.quantity}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, quantity: event.target.value }))
                 }
-              }}
-              required
-            />
-            <input
-              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-              placeholder="Nombre producto"
-              value={form.productName}
-              onChange={(event) =>
-                setForm((prev) => ({
-                  ...prev,
-                  productName: event.target.value,
-                }))
-              }
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  setProductSearch(form.productName);
-                  setProductModalOpen(true);
-                  loadProducts(form.productName).catch(() => {});
+                required
+              />
+              <input
+                className="min-w-[140px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="Costo"
+                type="number"
+                value={form.cost}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, cost: event.target.value }))
                 }
-            }}
-            required
-          />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Cantidad"
-            type="number"
-            value={form.quantity}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, quantity: event.target.value }))
-            }
-            required
-          />
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddItem();
+                  }
+                }}
+                required
+              />
+              <input
+                className="min-w-[140px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="Valor"
+                value={
+                  form.cost
+                    ? (Number(form.cost) * (1 + IVA)).toFixed(2)
+                    : ""
+                }
+                readOnly
+              />
+              <input
+                className="min-w-[160px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="Total"
+                value={
+                  form.cost && form.quantity
+                    ? (
+                        Number(form.cost) *
+                        (1 + IVA) *
+                        Number(form.quantity)
+                      ).toFixed(2)
+                    : ""
+                }
+                readOnly
+              />
+              <input
+                className="min-w-[120px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                placeholder="% venta"
+                value=""
+                readOnly
+              />
+            </div>
+          </div>
           <div className="md:col-span-3">
             <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white">
               Registrar compra
             </button>
           </div>
-          </div>
           {error && (
             <p className="md:col-span-3 text-sm text-rose-600">{error}</p>
           )}
         </form>
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+          <h3 className="text-sm font-semibold text-zinc-700">
+            Productos en la compra
+          </h3>
+          <div className="mt-3 max-h-[520px] overflow-y-auto">
+            <table className="w-full min-w-[900px] text-sm">
+              <thead className="sticky top-0 bg-zinc-50 text-left text-xs uppercase text-zinc-500">
+                <tr>
+                  <th className="px-3 py-2">Producto</th>
+                  <th className="px-3 py-2">Cod. Interno</th>
+                  <th className="px-3 py-2">Cantidad</th>
+                  <th className="px-3 py-2">Costo</th>
+                  <th className="px-3 py-2">Valor</th>
+                  <th className="px-3 py-2">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => {
+                  const valor = item.cost * (1 + IVA);
+                  const total = valor * item.quantity;
+                  return (
+                    <tr key={`${item.productId}-${index}`} className="border-t">
+                      <td className="px-3 py-2">{item.productName}</td>
+                      <td className="px-3 py-2">
+                        {item.internalProductCode}
+                      </td>
+                      <td className="px-3 py-2">{item.quantity}</td>
+                      <td className="px-3 py-2">{item.cost.toFixed(2)}</td>
+                      <td className="px-3 py-2">{valor.toFixed(2)}</td>
+                      <td className="px-3 py-2">{total.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+                {items.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-3 py-6 text-center text-xs text-zinc-500"
+                    >
+                      Aún no has agregado productos.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
           <table className="w-full text-sm">
