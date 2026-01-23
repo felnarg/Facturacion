@@ -291,8 +291,8 @@ export default function ComprasPage() {
             </div>
           </div>
 
-          <div className="w-full overflow-x-auto">
-            <div className="flex min-w-[960px] items-center gap-3">
+          <div className="form-row-scroll">
+            <div className="form-row-horizontal min-w-[960px]">
               <input
                 className="min-w-[180px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="Código interno"
