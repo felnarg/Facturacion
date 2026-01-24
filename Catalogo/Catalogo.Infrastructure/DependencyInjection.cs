@@ -22,6 +22,7 @@ public static class DependencyInjection
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMQ"));
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
+        services.AddHostedService<SalePercentageEventsConsumer>();
 
         return services;
     }

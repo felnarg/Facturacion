@@ -47,6 +47,7 @@ type PurchaseItem = {
   quantity: number;
   cost: number;
   salePercent: number;
+  originalSalePercent: number;
 };
 
 export default function ComprasPage() {
@@ -62,6 +63,7 @@ export default function ComprasPage() {
     quantity: "",
     cost: "",
     salePercent: "",
+    originalSalePercent: "",
     supplierId: "",
     supplierName: "",
     supplierInvoiceNumber: "",
@@ -72,49 +74,6 @@ export default function ComprasPage() {
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
   const IVA = 0.19;
-
-  const getSelectedProduct = () =>
-    products.find((product) => product.id === form.productId);
-
-  const syncSalePercentage = async (nextValue: string) => {
-    const productId = form.productId;
-    if (!productId) {
-      return;
-    }
-
-    const parsed = Number(nextValue);
-    if (!parsed || parsed < 1 || parsed > 100) {
-      return;
-    }
-
-    const current = getSelectedProduct()?.salePercentage;
-    if (current !== undefined && Number(current) === parsed) {
-      return;
-    }
-
-    try {
-      await apiRequest<Product>(
-        `/api/catalog/products/${productId}/sale-percentage`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ salePercentage: parsed }),
-        },
-        user.token
-      );
-
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === productId
-            ? { ...product, salePercentage: parsed }
-            : product
-        )
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error actualizando % venta"
-      );
-    }
-  };
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -224,6 +183,8 @@ export default function ComprasPage() {
               quantity: item.quantity,
               supplierId: form.supplierId,
               supplierInvoiceNumber: form.supplierInvoiceNumber,
+                salePercentage: item.salePercent,
+                originalSalePercentage: item.originalSalePercent,
             }),
           },
           user.token
@@ -236,6 +197,7 @@ export default function ComprasPage() {
         quantity: "",
         cost: "",
         salePercent: "",
+        originalSalePercent: "",
         supplierId: "",
         supplierName: "",
         supplierInvoiceNumber: "",
@@ -262,6 +224,7 @@ export default function ComprasPage() {
     const quantity = Number(form.quantity);
     const cost = Number(form.cost);
     const salePercent = Number(form.salePercent);
+    const originalSalePercent = Number(form.originalSalePercent);
     if (
       !quantity ||
       quantity <= 0 ||
@@ -275,8 +238,6 @@ export default function ComprasPage() {
       return;
     }
 
-    await syncSalePercentage(String(salePercent));
-
     setItems((prev) => [
       ...prev,
       {
@@ -286,6 +247,10 @@ export default function ComprasPage() {
         quantity,
         cost,
         salePercent,
+        originalSalePercent:
+          originalSalePercent && originalSalePercent > 0
+            ? originalSalePercent
+            : salePercent,
       },
     ]);
 
@@ -297,6 +262,7 @@ export default function ComprasPage() {
       quantity: "",
       cost: "",
       salePercent: "",
+      originalSalePercent: "",
     }));
   };
 
@@ -388,6 +354,7 @@ export default function ComprasPage() {
                         productId: exact.id,
                         productName: exact.name,
                         salePercent: String(exact.salePercentage ?? ""),
+                        originalSalePercent: String(exact.salePercentage ?? ""),
                       }));
                     } else {
                       setProductSearch(term);
@@ -482,9 +449,6 @@ export default function ComprasPage() {
                     salePercent: event.target.value,
                   }))
                 }
-                onBlur={() => {
-                  void syncSalePercentage(form.salePercent);
-                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
@@ -715,6 +679,7 @@ export default function ComprasPage() {
                         internalProductCode: String(product.internalProductCode),
                         productName: product.name,
                           salePercent: String(product.salePercentage ?? ""),
+                          originalSalePercent: String(product.salePercentage ?? ""),
                       }));
                       setProductModalOpen(false);
                     }}

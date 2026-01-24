@@ -6,4 +6,6 @@ public sealed record CreatePurchaseRequest(
     string ProductName,
     int Quantity,
     Guid SupplierId,
-    string SupplierInvoiceNumber);
+    string SupplierInvoiceNumber,
+    decimal SalePercentage,
+    decimal? OriginalSalePercentage);

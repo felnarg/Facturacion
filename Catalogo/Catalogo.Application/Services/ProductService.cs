@@ -109,23 +109,6 @@ public sealed class ProductService : IProductService
         return true;
     }
 
-    public async Task<ProductDto?> UpdateSalePercentageAsync(
-        Guid id,
-        decimal salePercentage,
-        CancellationToken cancellationToken = default)
-    {
-        var product = await _repository.GetByIdAsync(id, cancellationToken);
-        if (product is null)
-        {
-            return null;
-        }
-
-        product.UpdateSalePercentage(salePercentage);
-        await _repository.UpdateAsync(product, cancellationToken);
-
-        return Map(product);
-    }
-
     private static ProductDto Map(Product product)
     {
         return new ProductDto(

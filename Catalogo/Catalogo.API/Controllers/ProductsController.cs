@@ -61,21 +61,6 @@ public sealed class ProductsController : ControllerBase
         return Ok(product);
     }
 
-    [HttpPatch("{id:guid}/sale-percentage")]
-    public async Task<ActionResult<ProductDto>> UpdateSalePercentage(
-        Guid id,
-        UpdateSalePercentageRequest request,
-        CancellationToken cancellationToken)
-    {
-        var product = await _productService.UpdateSalePercentageAsync(id, request.SalePercentage, cancellationToken);
-        if (product is null)
-        {
-            return NotFound();
-        }
-
-        return Ok(product);
-    }
-
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {

@@ -3,6 +3,7 @@ using Compras.Application.DTOs;
 using Compras.Domain.Entities;
 using Compras.Domain.Repositories;
 using Facturacion.Shared.Events;
+using Facturacion.Shared.Events;
 
 namespace Compras.Application.Services;
 
@@ -51,6 +52,18 @@ public sealed class PurchaseService : IPurchaseService
             supplier.Name,
             request.SupplierInvoiceNumber);
         await _repository.AddAsync(purchase, cancellationToken);
+
+        if (request.OriginalSalePercentage.HasValue &&
+            request.SalePercentage != request.OriginalSalePercentage.Value)
+        {
+            var updatedEvent = new PurchaseSalePercentagesUpdated(
+                purchase.Id,
+                new[]
+                {
+                    new SalePercentageUpdatedItem(request.ProductId, request.SalePercentage)
+                });
+            await _eventBus.PublishAsync(updatedEvent, "product.salepercentage.updated", cancellationToken);
+        }
         return Map(purchase);
     }
 

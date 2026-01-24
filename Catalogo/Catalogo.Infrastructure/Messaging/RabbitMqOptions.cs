@@ -8,4 +8,5 @@ public sealed class RabbitMqOptions
     public string Password { get; set; } = "guest";
     public string VirtualHost { get; set; } = "/";
     public string Exchange { get; set; } = "facturacion.events";
+    public string Queue { get; set; } = "catalogo.events";
 }

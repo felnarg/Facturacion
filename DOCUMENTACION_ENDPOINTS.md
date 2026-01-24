@@ -17,8 +17,6 @@ Base: `/api/catalog`
   - Crea un producto nuevo.
 - `PUT /api/catalog/products/{id}`
   - Actualiza los datos de un producto existente.
-- `PATCH /api/catalog/products/{id}/sale-percentage`
-  - Actualiza solo el porcentaje de venta del producto.
 - `DELETE /api/catalog/products/{id}`
   - Elimina un producto.
 
@@ -105,4 +103,31 @@ Base: `/api/auth` y `/api/users`
   - Obtiene un usuario por `Id`.
 - `POST /api/users`
   - Crea un usuario manualmente.
+
+---
+
+## Eventos de Integración (RabbitMQ)
+Exchange: `facturacion.events`
+
+Estos eventos se publican entre microservicios para mantener sincronía entre
+dominios.
+
+- `product.created`
+  - Emisor: Catálogo
+  - Consumidor: Inventario (crea stock inicial).
+- `product.updated`
+  - Emisor: Catálogo
+  - Consumidor: (sin consumidores actuales).
+- `product.deleted`
+  - Emisor: Catálogo
+  - Consumidor: (sin consumidores actuales).
+- `stock.received`
+  - Emisor: Compras
+  - Consumidor: Inventario (incrementa stock).
+- `sale.completed`
+  - Emisor: Ventas
+  - Consumidor: Inventario (decrementa stock), Clientes (historial de ventas).
+- `product.salepercentage.updated`
+  - Emisor: Compras (al registrar compra con % venta modificado)
+  - Consumidor: Catálogo (actualiza % venta del producto si cambió).
 
