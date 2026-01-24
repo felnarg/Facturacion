@@ -49,6 +49,12 @@ textarea::placeholder {
   background-color: #1f2937;
 }
 
+.btn-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
 .btn-secondary {
   border: 1px solid #d1d5db;
   color: #1f2937;

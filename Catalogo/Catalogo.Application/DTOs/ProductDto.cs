@@ -9,5 +9,6 @@ public sealed record ProductDto(
     string Sku,
     int SupplierProductCode,
     int InternalProductCode,
+    decimal SalePercentage,
     DateTime CreatedAt,
     DateTime UpdatedAt);

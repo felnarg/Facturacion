@@ -10,6 +10,7 @@ public class Product
     public string Sku { get; private set; } = string.Empty;
     public int SupplierProductCode { get; private set; }
     public int InternalProductCode { get; private set; }
+    public decimal SalePercentage { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -24,10 +25,19 @@ public class Product
         int stock,
         string sku,
         int supplierProductCode,
-        int internalProductCode)
+        int internalProductCode,
+        decimal salePercentage)
     {
         Id = Guid.NewGuid();
-        SetCoreFields(name, description, price, stock, sku, supplierProductCode, internalProductCode);
+        SetCoreFields(
+            name,
+            description,
+            price,
+            stock,
+            sku,
+            supplierProductCode,
+            internalProductCode,
+            salePercentage);
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -39,9 +49,25 @@ public class Product
         int stock,
         string sku,
         int supplierProductCode,
-        int internalProductCode)
+        int internalProductCode,
+        decimal salePercentage)
     {
-        SetCoreFields(name, description, price, stock, sku, supplierProductCode, internalProductCode);
+        SetCoreFields(
+            name,
+            description,
+            price,
+            stock,
+            sku,
+            supplierProductCode,
+            internalProductCode,
+            salePercentage);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateSalePercentage(decimal salePercentage)
+    {
+        ValidateSalePercentage(salePercentage);
+        SalePercentage = salePercentage;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -52,7 +78,8 @@ public class Product
         int stock,
         string sku,
         int supplierProductCode,
-        int internalProductCode)
+        int internalProductCode,
+        decimal salePercentage)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -84,6 +111,8 @@ public class Product
             throw new ArgumentOutOfRangeException(nameof(internalProductCode), "El código interno es obligatorio.");
         }
 
+        ValidateSalePercentage(salePercentage);
+
         Name = name.Trim();
         Description = description?.Trim() ?? string.Empty;
         Price = price;
@@ -91,5 +120,14 @@ public class Product
         Sku = sku.Trim();
         SupplierProductCode = supplierProductCode;
         InternalProductCode = internalProductCode;
+        SalePercentage = salePercentage;
+    }
+
+    private static void ValidateSalePercentage(decimal salePercentage)
+    {
+        if (salePercentage < 1 || salePercentage > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(salePercentage), "El porcentaje de venta debe estar entre 1 y 100.");
+        }
     }
 }

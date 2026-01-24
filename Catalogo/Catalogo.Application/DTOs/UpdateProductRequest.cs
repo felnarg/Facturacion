@@ -7,4 +7,5 @@ public sealed record UpdateProductRequest(
     int Stock,
     string Sku,
     int SupplierProductCode,
-    int InternalProductCode);
+    int InternalProductCode,
+    decimal SalePercentage = 30m);

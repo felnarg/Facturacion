@@ -29,6 +29,11 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(product => product.InternalProductCode)
             .IsRequired();
 
+        builder.Property(product => product.SalePercentage)
+            .HasColumnType("decimal(5,2)")
+            .HasDefaultValue(30m)
+            .IsRequired();
+
         builder.Property(product => product.Price)
             .HasColumnType("decimal(18,2)")
             .IsRequired();
@@ -54,6 +59,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Sku = "SKU-BASE-001",
                 SupplierProductCode = 11001,
                 InternalProductCode = 50001,
+                SalePercentage = 30m,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             },
@@ -67,6 +73,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Sku = "SKU-PREM-002",
                 SupplierProductCode = 11002,
                 InternalProductCode = 50002,
+                SalePercentage = 25m,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             });

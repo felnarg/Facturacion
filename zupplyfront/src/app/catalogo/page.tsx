@@ -14,6 +14,7 @@ type Product = {
   sku: string;
   supplierProductCode: number;
   internalProductCode: number;
+  salePercentage: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,6 +27,7 @@ const emptyForm = {
   sku: "",
   supplierProductCode: "",
   internalProductCode: "",
+  salePercentage: "",
 };
 
 export default function CatalogoPage() {
@@ -79,6 +81,7 @@ export default function CatalogoPage() {
       sku: form.sku,
       supplierProductCode: Number(form.supplierProductCode),
       internalProductCode: Number(form.internalProductCode),
+      salePercentage: Number(form.salePercentage),
     };
 
     try {
@@ -120,6 +123,7 @@ export default function CatalogoPage() {
       sku: product.sku,
       supplierProductCode: String(product.supplierProductCode),
       internalProductCode: String(product.internalProductCode),
+      salePercentage: String(product.salePercentage),
     });
   };
 
@@ -175,6 +179,18 @@ export default function CatalogoPage() {
             value={form.price}
             onChange={(event) =>
               setForm((prev) => ({ ...prev, price: event.target.value }))
+            }
+            required
+          />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="% Venta"
+            type="number"
+            min={1}
+            max={100}
+            value={form.salePercentage}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, salePercentage: event.target.value }))
             }
             required
           />
@@ -261,6 +277,7 @@ export default function CatalogoPage() {
                 <th className="px-4 py-3">Cod. Prov</th>
                 <th className="px-4 py-3">Cod. Interno</th>
                 <th className="px-4 py-3">Precio</th>
+                <th className="px-4 py-3">% Venta</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -273,6 +290,7 @@ export default function CatalogoPage() {
                   <td className="px-4 py-3">{product.supplierProductCode}</td>
                   <td className="px-4 py-3">{product.internalProductCode}</td>
                   <td className="px-4 py-3">{product.price}</td>
+                  <td className="px-4 py-3">{product.salePercentage}</td>
                   <td className="px-4 py-3">{product.stock}</td>
                   <td className="px-4 py-3 text-right">
                     <button
@@ -293,7 +311,7 @@ export default function CatalogoPage() {
               {products.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-6 text-center text-sm text-zinc-500"
                   >
                     No hay productos registrados.
@@ -341,6 +359,7 @@ export default function CatalogoPage() {
                         name: product.name,
                         description: product.description,
                         price: String(product.price),
+                        salePercentage: String(product.salePercentage),
                         stock: String(product.stock),
                         sku: product.sku,
                         supplierProductCode: String(product.supplierProductCode),

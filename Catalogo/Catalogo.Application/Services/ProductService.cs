@@ -46,7 +46,8 @@ public sealed class ProductService : IProductService
             request.Stock,
             request.Sku,
             request.SupplierProductCode,
-            request.InternalProductCode);
+            request.InternalProductCode,
+            request.SalePercentage);
         await _repository.AddAsync(product, cancellationToken);
 
         var createdEvent = new ProductCreated(
@@ -76,7 +77,8 @@ public sealed class ProductService : IProductService
             request.Stock,
             request.Sku,
             request.SupplierProductCode,
-            request.InternalProductCode);
+            request.InternalProductCode,
+            request.SalePercentage);
         await _repository.UpdateAsync(product, cancellationToken);
 
         var updatedEvent = new ProductUpdated(
@@ -107,6 +109,23 @@ public sealed class ProductService : IProductService
         return true;
     }
 
+    public async Task<ProductDto?> UpdateSalePercentageAsync(
+        Guid id,
+        decimal salePercentage,
+        CancellationToken cancellationToken = default)
+    {
+        var product = await _repository.GetByIdAsync(id, cancellationToken);
+        if (product is null)
+        {
+            return null;
+        }
+
+        product.UpdateSalePercentage(salePercentage);
+        await _repository.UpdateAsync(product, cancellationToken);
+
+        return Map(product);
+    }
+
     private static ProductDto Map(Product product)
     {
         return new ProductDto(
@@ -118,6 +137,7 @@ public sealed class ProductService : IProductService
             product.Sku,
             product.SupplierProductCode,
             product.InternalProductCode,
+            product.SalePercentage,
             product.CreatedAt,
             product.UpdatedAt);
     }

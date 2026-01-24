@@ -37,6 +37,7 @@ type Product = {
   sku: string;
   supplierProductCode: number;
   internalProductCode: number;
+  salePercentage: number;
 };
 
 type PurchaseItem = {
@@ -71,6 +72,49 @@ export default function ComprasPage() {
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
   const IVA = 0.19;
+
+  const getSelectedProduct = () =>
+    products.find((product) => product.id === form.productId);
+
+  const syncSalePercentage = async (nextValue: string) => {
+    const productId = form.productId;
+    if (!productId) {
+      return;
+    }
+
+    const parsed = Number(nextValue);
+    if (!parsed || parsed < 1 || parsed > 100) {
+      return;
+    }
+
+    const current = getSelectedProduct()?.salePercentage;
+    if (current !== undefined && Number(current) === parsed) {
+      return;
+    }
+
+    try {
+      await apiRequest<Product>(
+        `/api/catalog/products/${productId}/sale-percentage`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ salePercentage: parsed }),
+        },
+        user.token
+      );
+
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.id === productId
+            ? { ...product, salePercentage: parsed }
+            : product
+        )
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error actualizando % venta"
+      );
+    }
+  };
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -157,10 +201,16 @@ export default function ComprasPage() {
     setError("");
 
     try {
-      if (items.length === 0) {
+    if (items.length === 0) {
         setError("Debes agregar al menos un producto.");
         return;
       }
+
+    const invalidItem = items.find((item) => item.internalProductCode <= 0);
+    if (invalidItem) {
+      setError("Revisa el código interno de los productos agregados.");
+      return;
+    }
 
       for (const item of items) {
         await apiRequest<Purchase>(
@@ -185,6 +235,7 @@ export default function ComprasPage() {
         productName: "",
         quantity: "",
         cost: "",
+        salePercent: "",
         supplierId: "",
         supplierName: "",
         supplierInvoiceNumber: "",
@@ -196,9 +247,15 @@ export default function ComprasPage() {
     }
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!form.productId || !form.internalProductCode || !form.productName) {
       setError("Debes seleccionar un producto válido.");
+      return;
+    }
+
+    const internalProductCode = Number(form.internalProductCode);
+    if (!internalProductCode || internalProductCode <= 0) {
+      setError("El código interno es obligatorio.");
       return;
     }
 
@@ -218,11 +275,13 @@ export default function ComprasPage() {
       return;
     }
 
+    await syncSalePercentage(String(salePercent));
+
     setItems((prev) => [
       ...prev,
       {
         productId: form.productId,
-        internalProductCode: Number(form.internalProductCode),
+        internalProductCode,
         productName: form.productName,
         quantity,
         cost,
@@ -294,13 +353,6 @@ export default function ComprasPage() {
                 }
                 required
               />
-              <button
-                type="button"
-                className="btn-secondary text-xs"
-                onClick={() => setSupplierModalOpen(true)}
-              >
-                Factura
-              </button>
             </div>
           </div>
 
@@ -309,7 +361,7 @@ export default function ComprasPage() {
               <input
                 className="min-w-[180px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="Código interno"
-                value={form.internalProductCode}
+                value={form.internalProductCode ?? ""}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
@@ -319,8 +371,11 @@ export default function ComprasPage() {
                 onKeyDown={async (event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    const term = form.internalProductCode.trim();
+                    const term = event.currentTarget.value.trim();
                     if (!term) {
+                      setProductSearch("");
+                      setProductModalOpen(true);
+                      loadProducts().catch(() => {});
                       return;
                     }
                     const result = await loadProducts(term);
@@ -332,19 +387,20 @@ export default function ComprasPage() {
                         ...prev,
                         productId: exact.id,
                         productName: exact.name,
+                        salePercent: String(exact.salePercentage ?? ""),
                       }));
                     } else {
                       setProductSearch(term);
                       setProductModalOpen(true);
+                      loadProducts(term).catch(() => {});
                     }
                   }
                 }}
-                required
               />
               <input
                 className="min-w-[220px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="Nombre producto"
-                value={form.productName}
+                value={form.productName ?? ""}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
@@ -354,38 +410,40 @@ export default function ComprasPage() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    setProductSearch(form.productName);
+                    const term = event.currentTarget.value.trim();
+                    setProductSearch(term);
                     setProductModalOpen(true);
-                    loadProducts(form.productName).catch(() => {});
+                    if (term) {
+                      loadProducts(term).catch(() => {});
+                    } else {
+                      loadProducts().catch(() => {});
+                    }
                   }
                 }}
-                required
               />
               <input
                 className="min-w-[120px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="Cantidad"
                 type="number"
-                value={form.quantity}
+                value={form.quantity ?? ""}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, quantity: event.target.value }))
                 }
-                required
               />
               <input
                 className="min-w-[140px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
                 placeholder="Costo"
                 type="number"
-                value={form.cost}
+                value={form.cost ?? ""}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, cost: event.target.value }))
                 }
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    handleAddItem();
+                    void handleAddItem();
                   }
                 }}
-                required
               />
               <input
                 className="min-w-[140px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
@@ -417,30 +475,32 @@ export default function ComprasPage() {
                 type="number"
                 min={1}
                 max={100}
-                value={form.salePercent}
+                value={form.salePercent ?? ""}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
                     salePercent: event.target.value,
                   }))
                 }
+                onBlur={() => {
+                  void syncSalePercentage(form.salePercent);
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    handleAddItem();
+                    void handleAddItem();
                   }
                 }}
-                required
               />
             </div>
           </div>
           <div className="md:col-span-3">
-            <button className="btn-primary">
+            <button className="btn-primary" disabled={items.length === 0}>
               Registrar compra
             </button>
             <button
               type="button"
-              onClick={handleAddItem}
+              onClick={() => void handleAddItem()}
               className="btn-secondary ml-3"
             >
               Agregar producto
@@ -472,14 +532,22 @@ export default function ComprasPage() {
                 {items.map((item, index) => {
                   const valor = item.cost * (1 + IVA);
                   const total = valor * item.quantity;
+                  const hasInvalidCode = item.internalProductCode <= 0;
                   return (
                     <tr
                       key={`${item.productId}-${index}`}
-                      className="border-t text-zinc-800"
+                      className={`border-t text-zinc-800 ${
+                        hasInvalidCode ? "bg-rose-50 text-rose-700" : ""
+                      }`}
                     >
                       <td className="px-3 py-2">{item.productName}</td>
                       <td className="px-3 py-2">
                         {item.internalProductCode}
+                        {hasInvalidCode && (
+                          <span className="ml-2 text-xs text-rose-600">
+                            Código inválido
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2">{item.quantity}</td>
                       <td className="px-3 py-2">{item.cost.toFixed(2)}</td>
@@ -646,6 +714,7 @@ export default function ComprasPage() {
                         productId: product.id,
                         internalProductCode: String(product.internalProductCode),
                         productName: product.name,
+                          salePercent: String(product.salePercentage ?? ""),
                       }));
                       setProductModalOpen(false);
                     }}
