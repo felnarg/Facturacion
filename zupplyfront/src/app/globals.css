@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
 }
 
 @theme inline {
@@ -67,6 +67,24 @@ textarea::placeholder {
 
 .btn-secondary:hover {
   background-color: #f3f4f6;
+}
+
+.dev-block-header {
+  margin-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  background: #111827;
+  color: #f3f4f6;
+  padding: 2px 10px;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.dev-mode .dev-block-container {
+  border: 1px solid #111827;
 }
 .form-row-scroll {
   width: 100%;

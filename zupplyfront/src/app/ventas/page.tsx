@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
+import { DevBlockHeader } from "@/components/DevBlockHeader";
 
 type SaleItem = {
   productId: string;
@@ -80,7 +81,8 @@ export default function VentasPage() {
           </p>
         </header>
 
-        <div className="rounded-xl bg-white p-4 shadow-sm">
+        <div className="dev-block-container rounded-xl bg-white p-4 shadow-sm">
+          <DevBlockHeader label="lima" />
           <h3 className="text-sm font-semibold text-zinc-700">
             Crear nueva venta
           </h3>
@@ -128,7 +130,8 @@ export default function VentasPage() {
           {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+        <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
+          <DevBlockHeader label="pizarra" />
           <table className="w-full text-sm">
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>

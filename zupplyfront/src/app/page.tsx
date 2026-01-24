@@ -3,6 +3,7 @@
 import { ModuleCard } from "@/components/ModuleCard";
 import { Protected } from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
+import { DevBlockHeader } from "@/components/DevBlockHeader";
 
 export default function Home() {
   const { isAuthenticated, permissions } = useAuth();
@@ -48,7 +49,8 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-xl bg-white p-6 shadow-sm">
+      <header className="dev-block-container rounded-xl bg-white p-6 shadow-sm">
+        <DevBlockHeader label="sol" />
         <h2 className="text-2xl font-semibold text-zinc-900">
           Panel Operativo Zupply
         </h2>

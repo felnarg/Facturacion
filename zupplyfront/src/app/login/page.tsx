@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
+import { DevBlockHeader } from "@/components/DevBlockHeader";
 import type { Role } from "@/lib/permissions";
 
 type AuthResponse = {
@@ -74,7 +75,8 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col justify-center">
-      <div className="rounded-xl bg-white p-6 shadow-sm">
+      <div className="dev-block-container rounded-xl bg-white p-6 shadow-sm">
+        <DevBlockHeader label="aurora" />
         <h2 className="text-xl font-semibold text-zinc-900">
           {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
         </h2>

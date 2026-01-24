@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
+import { DevBlockHeader } from "@/components/DevBlockHeader";
 
 type Supplier = {
   id: string;
@@ -135,7 +136,8 @@ export default function ProveedoresPage() {
           </p>
         </header>
 
-        <div className="rounded-xl bg-white p-4 shadow-sm">
+        <div className="dev-block-container rounded-xl bg-white p-4 shadow-sm">
+          <DevBlockHeader label="delta" />
           <input
             className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Buscar por nombre, email, contacto o teléfono"
@@ -146,8 +148,9 @@ export default function ProveedoresPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-2"
+          className="dev-block-container grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-2"
         >
+          <DevBlockHeader label="cobre" />
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Nombre"
@@ -211,7 +214,8 @@ export default function ProveedoresPage() {
           )}
         </form>
 
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+        <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
+          <DevBlockHeader label="faro" />
           <table className="w-full text-sm">
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>
