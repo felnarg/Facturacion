@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
@@ -87,6 +87,10 @@ export default function ComprasPage() {
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+
+  // Refs for focus management
+  const supplierInputRef = useRef<HTMLInputElement>(null);
+  const productNameInputRef = useRef<HTMLInputElement>(null);
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -397,6 +401,7 @@ export default function ComprasPage() {
           <div className="grid w-full gap-3 md:grid-cols-2">
             <div className="flex items-center gap-2">
               <input
+                ref={supplierInputRef}
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 placeholder="Proveedor"
                 value={form.supplierName}
@@ -487,6 +492,7 @@ export default function ComprasPage() {
                 initialWidth: 220,
                 content: (
                   <input
+                    ref={productNameInputRef}
                     className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                     placeholder="Nombre"
                     value={form.productName ?? ""}
@@ -826,6 +832,12 @@ export default function ComprasPage() {
                   value={supplierSearch}
                   autoFocus
                   onChange={(event) => setSupplierSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      setSupplierModalOpen(false);
+                      setTimeout(() => supplierInputRef.current?.focus(), 0);
+                    }
+                  }}
                 />
               </div>
 
@@ -840,6 +852,7 @@ export default function ComprasPage() {
                         supplierName: supplier.name,
                       }));
                       setSupplierModalOpen(false);
+                      setTimeout(() => supplierInputRef.current?.focus(), 0);
                     }}
                     className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
                   >
@@ -888,6 +901,12 @@ export default function ComprasPage() {
                   value={productSearch}
                   autoFocus
                   onChange={(event) => setProductSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      setProductModalOpen(false);
+                      setTimeout(() => productNameInputRef.current?.focus(), 0);
+                    }
+                  }}
                 />
               </div>
 
@@ -898,6 +917,7 @@ export default function ComprasPage() {
                     onClick={() => {
                       fillProductForm(product);
                       setProductModalOpen(false);
+                      setTimeout(() => productNameInputRef.current?.focus(), 0);
                     }}
                     className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
                   >
