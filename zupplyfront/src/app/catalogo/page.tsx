@@ -77,11 +77,29 @@ export default function CatalogoPage() {
     setSearchResults(data);
   };
 
+  // Global Enter listener
   useEffect(() => {
-    loadProducts().catch((err) =>
-      setError(err instanceof Error ? err.message : "Error cargando productos")
-    );
-  }, []);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If modal is open, let it behave normally (or handle search there)
+      if (searchModalOpen) return;
+
+      // Check if the key is Enter
+      if (e.key === "Enter") {
+        // We only want to open if the user isn't typing in a form field that might need Enter,
+        // although the user requested "when I press enter, open search".
+        // To prevent interfering with buttons or other Enter actions, we might check activeElement.
+        // However, standard form 'Enter' usually submits. The user wants to OVERRIDE specific workflow. "despliegue un pop up"
+        // Let's compromise: If focus is NOT on a button/input, OR if it IS but we want to intercept.
+        // Given the request "presione enter se despliegue un pop up", it sounds like a hotkey.
+        // I'll prevent default to avoid submission if it was going to happen, and open the modal.
+        e.preventDefault();
+        setSearchModalOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [searchModalOpen]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -133,7 +151,6 @@ export default function CatalogoPage() {
   };
 
 
-
   const handleEdit = (product: Product) => {
     setEditing(product);
     setForm({
@@ -156,12 +173,21 @@ export default function CatalogoPage() {
       return;
     }
 
-    await apiRequest(
-      `/api/catalog/products/${id}`,
-      { method: "DELETE" },
-      user.token
-    );
-    await loadProducts();
+    try {
+      await apiRequest(
+        `/api/catalog/products/${id}`,
+        { method: "DELETE" },
+        user.token
+      );
+      // Reset form if we were editing the deleted item
+      if (editing?.id === id) {
+        setEditing(null);
+        setForm({ ...emptyForm });
+      }
+      await loadProducts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error eliminando producto");
+    }
   };
 
   return (
@@ -181,173 +207,197 @@ export default function CatalogoPage() {
           <DevBlockHeader label="tomillo" />
 
           {/* 1. Nombre */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Nombre"
-            value={form.name}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, name: event.target.value }))
-            }
-            required
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Nombre</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              value={form.name}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, name: event.target.value }))
+              }
+              required
+            />
+          </div>
 
           {/* 2. Codigo interno */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Código interno"
-            type="number"
-            value={form.internalProductCode}
-            onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                internalProductCode: event.target.value,
-              }))
-            }
-            required
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Código interno</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              value={form.internalProductCode}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  internalProductCode: event.target.value,
+                }))
+              }
+              required
+            />
+          </div>
 
-          {/* 3. Codigo producto (Old: Codigo proveedor) */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Código producto"
-            type="number"
-            value={form.supplierProductCode}
-            onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                supplierProductCode: event.target.value,
-              }))
-            }
-            required
-          />
+          {/* 3. Codigo producto */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Código producto</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              value={form.supplierProductCode}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  supplierProductCode: event.target.value,
+                }))
+              }
+              required
+            />
+          </div>
 
           {/* 4. Stock */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Stock"
-            type="number"
-            value={form.stock}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, stock: event.target.value }))
-            }
-            required
-          />
-
-          {/* (Maintain Price even if not in user list) */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Precio"
-            type="number"
-            value={form.price}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, price: event.target.value }))
-            }
-            required
-          />
-
-          {/* 5. imp consumo */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Imp. Consumo"
-            type="number"
-            min={0}
-            max={100}
-            value={form.consumptionTaxPercentage}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, consumptionTaxPercentage: event.target.value }))
-            }
-            required
-          />
-
-          {/* 6. iva */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% IVA"
-            type="number"
-            min={0}
-            max={100}
-            value={form.iva}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, iva: event.target.value }))
-            }
-            required
-          />
-
-          {/* 7. % venta */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Venta"
-            type="number"
-            min={0}
-            max={100}
-            value={form.salePercentage}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, salePercentage: event.target.value }))
-            }
-            required
-          />
-
-          {/* 8. % venta mayor */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Venta Mayor"
-            type="number"
-            min={0}
-            max={100}
-            value={form.wholesaleSalePercentage}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, wholesaleSalePercentage: event.target.value }))
-            }
-            required
-          />
-
-          {/* 9. % venta especial */}
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Venta Especial"
-            type="number"
-            min={0}
-            max={100}
-            value={form.specialSalePercentage}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, specialSalePercentage: event.target.value }))
-            }
-            required
-          />
-
-          {/* 10. Descripción */}
-          <textarea
-            className="md:col-span-2 rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Descripción"
-            value={form.description}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, description: event.target.value }))
-            }
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                setSearchTerm(form.description);
-                setSearchModalOpen(true);
-                searchProducts(form.description).catch(() => { });
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Stock</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              value={form.stock}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, stock: event.target.value }))
               }
-            }}
-          />
+              required
+            />
+          </div>
+
+          {/* 5. Precio */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Precio</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              value={form.price}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, price: event.target.value }))
+              }
+              required
+            />
+          </div>
+
+          {/* 6. imp consumo */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">% Imp. Consumo</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              min={0}
+              max={100}
+              value={form.consumptionTaxPercentage}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, consumptionTaxPercentage: event.target.value }))
+              }
+              required
+            />
+          </div>
+
+          {/* 7. iva */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">% IVA</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              min={0}
+              max={100}
+              value={form.iva}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, iva: event.target.value }))
+              }
+              required
+            />
+          </div>
+
+          {/* 8. % venta */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">% Venta</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              min={0}
+              max={100}
+              value={form.salePercentage}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, salePercentage: event.target.value }))
+              }
+              required
+            />
+          </div>
+
+          {/* 9. % venta mayor */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">% Venta Mayor</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              min={0}
+              max={100}
+              value={form.wholesaleSalePercentage}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, wholesaleSalePercentage: event.target.value }))
+              }
+              required
+            />
+          </div>
+
+          {/* 10. % venta especial */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">% Venta Especial</label>
+            <input
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              type="number"
+              min={0}
+              max={100}
+              value={form.specialSalePercentage}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, specialSalePercentage: event.target.value }))
+              }
+              required
+            />
+          </div>
+
+          {/* 11. Descripción */}
+          <div className="flex flex-col gap-1 md:col-span-2">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Descripción</label>
+            <textarea
+              className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              rows={3}
+              value={form.description}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, description: event.target.value }))
+              }
+            />
+          </div>
 
           <div className="md:col-span-2 flex items-center gap-3">
             <button type="submit" className="btn-primary">
               {editing ? "Actualizar" : "Crear"}
             </button>
             {editing && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                  setForm({ ...emptyForm });
-                }}
-                className="btn-secondary"
-              >
-                Cancelar
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(editing.id)}
+                  className="rounded-md bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-100"
+                >
+                  Eliminar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(null);
+                    setForm({ ...emptyForm });
+                  }}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+              </>
             )}
           </div>
           {error && (
@@ -355,60 +405,7 @@ export default function CatalogoPage() {
           )}
         </form>
 
-        <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <DevBlockHeader label="nuez" />
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
-              <tr>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Cod. Prod</th>
-                <th className="px-4 py-3">Cod. Interno</th>
-                <th className="px-4 py-3">Precio</th>
-                <th className="px-4 py-3">% Venta</th>
-                <th className="px-4 py-3">% IVA</th>
-                <th className="px-4 py-3">Stock</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product.id} className="border-t border-zinc-100">
-                  <td className="px-4 py-3">{product.name}</td>
-                  <td className="px-4 py-3">{product.supplierProductCode}</td>
-                  <td className="px-4 py-3">{product.internalProductCode}</td>
-                  <td className="px-4 py-3">{product.price}</td>
-                  <td className="px-4 py-3">{product.salePercentage}</td>
-                  <td className="px-4 py-3">{product.iva}</td>
-                  <td className="px-4 py-3">{product.stock}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      className="mr-2 text-xs text-blue-600"
-                      onClick={() => handleEdit(product)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="text-xs text-rose-600"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {products.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-6 text-center text-sm text-zinc-500"
-                  >
-                    No hay productos registrados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+
 
         {searchModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -431,6 +428,7 @@ export default function CatalogoPage() {
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
                   placeholder="Busca por nombre, códigos o descripción"
                   value={searchTerm}
+                  autoFocus
                   onChange={(event) => {
                     const value = event.target.value;
                     setSearchTerm(value);
@@ -459,6 +457,8 @@ export default function CatalogoPage() {
                       });
                       setEditing(product);
                       setSearchModalOpen(false);
+                      setSearchTerm("");
+                      setSearchResults([]);
                     }}
                     className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
                   >
