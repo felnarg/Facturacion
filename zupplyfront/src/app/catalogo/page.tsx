@@ -12,10 +12,13 @@ type Product = {
   description: string;
   price: number;
   stock: number;
-  sku: string;
   supplierProductCode: number;
   internalProductCode: number;
   salePercentage: number;
+  consumptionTaxPercentage: number;
+  wholesaleSalePercentage: number;
+  specialSalePercentage: number;
+  iva: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -25,10 +28,13 @@ const emptyForm = {
   description: "",
   price: "",
   stock: "",
-  sku: "",
   supplierProductCode: "",
   internalProductCode: "",
   salePercentage: "",
+  consumptionTaxPercentage: "",
+  wholesaleSalePercentage: "",
+  specialSalePercentage: "",
+  iva: "19",
 };
 
 export default function CatalogoPage() {
@@ -79,10 +85,13 @@ export default function CatalogoPage() {
       description: form.description,
       price: Number(form.price),
       stock: Number(form.stock),
-      sku: form.sku,
       supplierProductCode: Number(form.supplierProductCode),
       internalProductCode: Number(form.internalProductCode),
       salePercentage: Number(form.salePercentage),
+      consumptionTaxPercentage: Number(form.consumptionTaxPercentage),
+      wholesaleSalePercentage: Number(form.wholesaleSalePercentage),
+      specialSalePercentage: Number(form.specialSalePercentage),
+      iva: Number(form.iva),
     };
 
     try {
@@ -121,10 +130,13 @@ export default function CatalogoPage() {
       description: product.description,
       price: String(product.price),
       stock: String(product.stock),
-      sku: product.sku,
       supplierProductCode: String(product.supplierProductCode),
       internalProductCode: String(product.internalProductCode),
       salePercentage: String(product.salePercentage),
+      consumptionTaxPercentage: String(product.consumptionTaxPercentage),
+      wholesaleSalePercentage: String(product.wholesaleSalePercentage),
+      specialSalePercentage: String(product.specialSalePercentage),
+      iva: String(product.iva),
     });
   };
 
@@ -167,10 +179,14 @@ export default function CatalogoPage() {
           />
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="SKU"
-            value={form.sku}
+            placeholder="Código interno"
+            type="number"
+            value={form.internalProductCode}
             onChange={(event) =>
-              setForm((prev) => ({ ...prev, sku: event.target.value }))
+              setForm((prev) => ({
+                ...prev,
+                internalProductCode: event.target.value,
+              }))
             }
             required
           />
@@ -186,9 +202,19 @@ export default function CatalogoPage() {
           />
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="Stock"
+            type="number"
+            value={form.stock}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, stock: event.target.value }))
+            }
+            required
+          />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="% Venta"
             type="number"
-            min={1}
+            min={0}
             max={100}
             value={form.salePercentage}
             onChange={(event) =>
@@ -198,11 +224,49 @@ export default function CatalogoPage() {
           />
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Stock"
+            placeholder="% Imp. Consumo"
             type="number"
-            value={form.stock}
+            min={0}
+            max={100}
+            value={form.consumptionTaxPercentage}
             onChange={(event) =>
-              setForm((prev) => ({ ...prev, stock: event.target.value }))
+              setForm((prev) => ({ ...prev, consumptionTaxPercentage: event.target.value }))
+            }
+            required
+          />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="% Venta Mayor"
+            type="number"
+            min={0}
+            max={100}
+            value={form.wholesaleSalePercentage}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, wholesaleSalePercentage: event.target.value }))
+            }
+            required
+          />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="% Venta Especial"
+            type="number"
+            min={0}
+            max={100}
+            value={form.specialSalePercentage}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, specialSalePercentage: event.target.value }))
+            }
+            required
+          />
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="% IVA"
+            type="number"
+            min={0}
+            max={100}
+            value={form.iva}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, iva: event.target.value }))
             }
             required
           />
@@ -219,19 +283,7 @@ export default function CatalogoPage() {
             }
             required
           />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Código interno"
-            type="number"
-            value={form.internalProductCode}
-            onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                internalProductCode: event.target.value,
-              }))
-            }
-            required
-          />
+
           <textarea
             className="md:col-span-2 rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Descripción"
@@ -244,7 +296,7 @@ export default function CatalogoPage() {
                 event.preventDefault();
                 setSearchTerm(form.description);
                 setSearchModalOpen(true);
-                searchProducts(form.description).catch(() => {});
+                searchProducts(form.description).catch(() => { });
               }
             }}
           />
@@ -276,11 +328,11 @@ export default function CatalogoPage() {
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">SKU</th>
                 <th className="px-4 py-3">Cod. Prov</th>
                 <th className="px-4 py-3">Cod. Interno</th>
                 <th className="px-4 py-3">Precio</th>
                 <th className="px-4 py-3">% Venta</th>
+                <th className="px-4 py-3">% IVA</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -289,11 +341,11 @@ export default function CatalogoPage() {
               {products.map((product) => (
                 <tr key={product.id} className="border-t border-zinc-100">
                   <td className="px-4 py-3">{product.name}</td>
-                  <td className="px-4 py-3">{product.sku}</td>
                   <td className="px-4 py-3">{product.supplierProductCode}</td>
                   <td className="px-4 py-3">{product.internalProductCode}</td>
                   <td className="px-4 py-3">{product.price}</td>
                   <td className="px-4 py-3">{product.salePercentage}</td>
+                  <td className="px-4 py-3">{product.iva}</td>
                   <td className="px-4 py-3">{product.stock}</td>
                   <td className="px-4 py-3 text-right">
                     <button
@@ -344,12 +396,12 @@ export default function CatalogoPage() {
               <div className="mt-3">
                 <input
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                  placeholder="Busca por nombre, SKU, códigos o descripción"
+                  placeholder="Busca por nombre, códigos o descripción"
                   value={searchTerm}
                   onChange={(event) => {
                     const value = event.target.value;
                     setSearchTerm(value);
-                    searchProducts(value).catch(() => {});
+                    searchProducts(value).catch(() => { });
                   }}
                 />
               </div>
@@ -364,8 +416,11 @@ export default function CatalogoPage() {
                         description: product.description,
                         price: String(product.price),
                         salePercentage: String(product.salePercentage),
+                        consumptionTaxPercentage: String(product.consumptionTaxPercentage),
+                        wholesaleSalePercentage: String(product.wholesaleSalePercentage),
+                        specialSalePercentage: String(product.specialSalePercentage),
+                        iva: String(product.iva),
                         stock: String(product.stock),
-                        sku: product.sku,
                         supplierProductCode: String(product.supplierProductCode),
                         internalProductCode: String(product.internalProductCode),
                       });
@@ -375,7 +430,7 @@ export default function CatalogoPage() {
                     className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
                   >
                     <span className="font-medium text-zinc-900">
-                      {product.name} ({product.sku})
+                      {product.name}
                     </span>
                     <span className="text-xs text-zinc-500">
                       Prov: {product.supplierProductCode} · Interno:{" "}

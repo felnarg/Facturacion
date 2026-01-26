@@ -7,10 +7,13 @@ public class Product
     public string Description { get; private set; } = string.Empty;
     public decimal Price { get; private set; }
     public int Stock { get; private set; }
-    public string Sku { get; private set; } = string.Empty;
     public int SupplierProductCode { get; private set; }
     public int InternalProductCode { get; private set; }
     public decimal SalePercentage { get; private set; }
+    public decimal ConsumptionTaxPercentage { get; private set; }
+    public decimal WholesaleSalePercentage { get; private set; }
+    public decimal SpecialSalePercentage { get; private set; }
+    public decimal Iva { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -23,10 +26,13 @@ public class Product
         string description,
         decimal price,
         int stock,
-        string sku,
         int supplierProductCode,
         int internalProductCode,
-        decimal salePercentage)
+        decimal salePercentage,
+        decimal consumptionTaxPercentage,
+        decimal wholesaleSalePercentage,
+        decimal specialSalePercentage,
+        decimal iva)
     {
         Id = Guid.NewGuid();
         SetCoreFields(
@@ -34,10 +40,13 @@ public class Product
             description,
             price,
             stock,
-            sku,
             supplierProductCode,
             internalProductCode,
-            salePercentage);
+            salePercentage,
+            consumptionTaxPercentage,
+            wholesaleSalePercentage,
+            specialSalePercentage,
+            iva);
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -47,26 +56,32 @@ public class Product
         string description,
         decimal price,
         int stock,
-        string sku,
         int supplierProductCode,
         int internalProductCode,
-        decimal salePercentage)
+        decimal salePercentage,
+        decimal consumptionTaxPercentage,
+        decimal wholesaleSalePercentage,
+        decimal specialSalePercentage,
+        decimal iva)
     {
         SetCoreFields(
             name,
             description,
             price,
             stock,
-            sku,
             supplierProductCode,
             internalProductCode,
-            salePercentage);
+            salePercentage,
+            consumptionTaxPercentage,
+            wholesaleSalePercentage,
+            specialSalePercentage,
+            iva);
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void UpdateSalePercentage(decimal salePercentage)
     {
-        ValidateSalePercentage(salePercentage);
+        ValidatePercentage(salePercentage, nameof(salePercentage));
         SalePercentage = salePercentage;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -76,10 +91,13 @@ public class Product
         string description,
         decimal price,
         int stock,
-        string sku,
         int supplierProductCode,
         int internalProductCode,
-        decimal salePercentage)
+        decimal salePercentage,
+        decimal consumptionTaxPercentage,
+        decimal wholesaleSalePercentage,
+        decimal specialSalePercentage,
+        decimal iva)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -96,11 +114,6 @@ public class Product
             throw new ArgumentOutOfRangeException(nameof(stock), "El stock no puede ser negativo.");
         }
 
-        if (string.IsNullOrWhiteSpace(sku))
-        {
-            throw new ArgumentException("El SKU es obligatorio.", nameof(sku));
-        }
-
         if (supplierProductCode <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(supplierProductCode), "El código del proveedor es obligatorio.");
@@ -111,23 +124,30 @@ public class Product
             throw new ArgumentOutOfRangeException(nameof(internalProductCode), "El código interno es obligatorio.");
         }
 
-        ValidateSalePercentage(salePercentage);
+        ValidatePercentage(salePercentage, nameof(salePercentage));
+        ValidatePercentage(consumptionTaxPercentage, nameof(consumptionTaxPercentage));
+        ValidatePercentage(wholesaleSalePercentage, nameof(wholesaleSalePercentage));
+        ValidatePercentage(specialSalePercentage, nameof(specialSalePercentage));
+        ValidatePercentage(iva, nameof(iva));
 
         Name = name.Trim();
         Description = description?.Trim() ?? string.Empty;
         Price = price;
         Stock = stock;
-        Sku = sku.Trim();
         SupplierProductCode = supplierProductCode;
         InternalProductCode = internalProductCode;
         SalePercentage = salePercentage;
+        ConsumptionTaxPercentage = consumptionTaxPercentage;
+        WholesaleSalePercentage = wholesaleSalePercentage;
+        SpecialSalePercentage = specialSalePercentage;
+        Iva = iva;
     }
 
-    private static void ValidateSalePercentage(decimal salePercentage)
+    private static void ValidatePercentage(decimal value, string paramName)
     {
-        if (salePercentage < 1 || salePercentage > 100)
+        if (value < 0 || value > 100)
         {
-            throw new ArgumentOutOfRangeException(nameof(salePercentage), "El porcentaje de venta debe estar entre 1 y 100.");
+            throw new ArgumentOutOfRangeException(paramName, "El porcentaje debe estar entre 0 y 100.");
         }
     }
 }

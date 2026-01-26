@@ -6,9 +6,12 @@ public sealed record ProductDto(
     string Description,
     decimal Price,
     int Stock,
-    string Sku,
     int SupplierProductCode,
     int InternalProductCode,
     decimal SalePercentage,
+    decimal ConsumptionTaxPercentage,
+    decimal WholesaleSalePercentage,
+    decimal SpecialSalePercentage,
+    decimal Iva,
     DateTime CreatedAt,
     DateTime UpdatedAt);

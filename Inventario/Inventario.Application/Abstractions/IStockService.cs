@@ -9,4 +9,5 @@ public interface IStockService
     Task<StockDto> CreateForProductAsync(Guid productId, CancellationToken cancellationToken = default);
     Task<StockDto?> IncreaseAsync(Guid productId, int quantity, CancellationToken cancellationToken = default);
     Task<StockDto?> DecreaseAsync(Guid productId, int quantity, CancellationToken cancellationToken = default);
+    Task<StockDto?> SetAsync(Guid productId, int quantity, CancellationToken cancellationToken = default);
 }

@@ -44,16 +44,19 @@ public sealed class ProductService : IProductService
             request.Description,
             request.Price,
             request.Stock,
-            request.Sku,
             request.SupplierProductCode,
             request.InternalProductCode,
-            request.SalePercentage);
+            request.SalePercentage,
+            request.ConsumptionTaxPercentage,
+            request.WholesaleSalePercentage,
+            request.SpecialSalePercentage,
+            request.Iva);
         await _repository.AddAsync(product, cancellationToken);
 
         var createdEvent = new ProductCreated(
             product.Id,
             product.Name,
-            product.Sku,
+            string.Empty,
             product.Price,
             product.Stock);
 
@@ -75,16 +78,19 @@ public sealed class ProductService : IProductService
             request.Description,
             request.Price,
             request.Stock,
-            request.Sku,
             request.SupplierProductCode,
             request.InternalProductCode,
-            request.SalePercentage);
+            request.SalePercentage,
+            request.ConsumptionTaxPercentage,
+            request.WholesaleSalePercentage,
+            request.SpecialSalePercentage,
+            request.Iva);
         await _repository.UpdateAsync(product, cancellationToken);
 
         var updatedEvent = new ProductUpdated(
             product.Id,
             product.Name,
-            product.Sku,
+            string.Empty,
             product.Price,
             product.Stock);
 
@@ -117,10 +123,13 @@ public sealed class ProductService : IProductService
             product.Description,
             product.Price,
             product.Stock,
-            product.Sku,
             product.SupplierProductCode,
             product.InternalProductCode,
             product.SalePercentage,
+            product.ConsumptionTaxPercentage,
+            product.WholesaleSalePercentage,
+            product.SpecialSalePercentage,
+            product.Iva,
             product.CreatedAt,
             product.UpdatedAt);
     }

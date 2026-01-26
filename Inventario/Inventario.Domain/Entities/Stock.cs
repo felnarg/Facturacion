@@ -47,4 +47,15 @@ public class Stock
         Quantity -= amount;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void SetQuantity(int quantity)
+    {
+        if (quantity < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity), "La cantidad no puede ser negativa.");
+        }
+
+        Quantity = quantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

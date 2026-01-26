@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
+import { ResizableInputGroup } from "@/components/ResizableInputGroup";
 
 type Purchase = {
   id: string;
@@ -35,10 +36,14 @@ type Product = {
   description: string;
   price: number;
   stock: number;
-  sku: string;
   supplierProductCode: number;
   internalProductCode: number;
   salePercentage: number;
+  consumptionTaxPercentage: number;
+  wholesaleSalePercentage: number;
+  specialSalePercentage: number;
+  iva: number;
+  createdAt: string;
 };
 
 type PurchaseItem = {
@@ -57,6 +62,7 @@ export default function ComprasPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [items, setItems] = useState<PurchaseItem[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     productId: "",
     internalProductCode: "",
@@ -65,6 +71,12 @@ export default function ComprasPage() {
     cost: "",
     salePercent: "",
     originalSalePercent: "",
+    consumptionTax: "",
+    wholesaleSale: "",
+    specialSale: "",
+    stock: "",
+    iva: "19",
+    productCreatedAt: "",
     supplierId: "",
     supplierName: "",
     supplierInvoiceNumber: "",
@@ -74,7 +86,6 @@ export default function ComprasPage() {
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
-  const IVA = 0.19;
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -161,16 +172,16 @@ export default function ComprasPage() {
     setError("");
 
     try {
-    if (items.length === 0) {
+      if (items.length === 0) {
         setError("Debes agregar al menos un producto.");
         return;
       }
 
-    const invalidItem = items.find((item) => item.internalProductCode <= 0);
-    if (invalidItem) {
-      setError("Revisa el código interno de los productos agregados.");
-      return;
-    }
+      const invalidItem = items.find((item) => item.internalProductCode <= 0);
+      if (invalidItem) {
+        setError("Revisa el código interno de los productos agregados.");
+        return;
+      }
 
       for (const item of items) {
         await apiRequest<Purchase>(
@@ -184,8 +195,8 @@ export default function ComprasPage() {
               quantity: item.quantity,
               supplierId: form.supplierId,
               supplierInvoiceNumber: form.supplierInvoiceNumber,
-                salePercentage: item.salePercent,
-                originalSalePercentage: item.originalSalePercent,
+              salePercentage: item.salePercent,
+              originalSalePercentage: item.originalSalePercent,
             }),
           },
           user.token
@@ -199,11 +210,18 @@ export default function ComprasPage() {
         cost: "",
         salePercent: "",
         originalSalePercent: "",
+        consumptionTax: "",
+        wholesaleSale: "",
+        specialSale: "",
+        stock: "",
+        iva: "19",
+        productCreatedAt: "",
         supplierId: "",
         supplierName: "",
         supplierInvoiceNumber: "",
       });
       setItems([]);
+      setSelectedProduct(null);
       await loadPurchases();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creando compra");
@@ -224,18 +242,17 @@ export default function ComprasPage() {
 
     const quantity = Number(form.quantity);
     const cost = Number(form.cost);
+
     const salePercent = Number(form.salePercent);
     const originalSalePercent = Number(form.originalSalePercent);
+
     if (
       !quantity ||
       quantity <= 0 ||
       !cost ||
-      cost <= 0 ||
-      !salePercent ||
-      salePercent < 1 ||
-      salePercent > 100
+      cost <= 0
     ) {
-      setError("Cantidad, costo y % venta deben ser válidos.");
+      setError("Cantidad y costo deben ser válidos.");
       return;
     }
 
@@ -247,7 +264,7 @@ export default function ComprasPage() {
         productName: form.productName,
         quantity,
         cost,
-        salePercent,
+        salePercent: salePercent || 0,
         originalSalePercent:
           originalSalePercent && originalSalePercent > 0
             ? originalSalePercent
@@ -264,7 +281,14 @@ export default function ComprasPage() {
       cost: "",
       salePercent: "",
       originalSalePercent: "",
+      consumptionTax: "",
+      wholesaleSale: "",
+      specialSale: "",
+      stock: "",
+      iva: "19",
+      productCreatedAt: "",
     }));
+    setSelectedProduct(null);
   };
 
   const markReceived = async (id: string) => {
@@ -275,6 +299,73 @@ export default function ComprasPage() {
     );
     await loadPurchases();
   };
+
+  const updateProductInBackend = async () => {
+    if (!selectedProduct) return;
+    try {
+      const payload = {
+        name: selectedProduct.name,
+        description: selectedProduct.description,
+        price: selectedProduct.price,
+        stock: Number(form.stock),
+        supplierProductCode: selectedProduct.supplierProductCode,
+        internalProductCode: selectedProduct.internalProductCode,
+        salePercentage: Number(form.salePercent),
+        consumptionTaxPercentage: Number(form.consumptionTax),
+        wholesaleSalePercentage: Number(form.wholesaleSale),
+        specialSalePercentage: Number(form.specialSale),
+        iva: Number(form.iva),
+      };
+
+      await apiRequest(
+        `/api/catalog/products/${selectedProduct.id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        },
+        user.token
+      );
+
+      // Update our local selectedProduct state just in case
+      setSelectedProduct({
+        ...selectedProduct,
+        stock: payload.stock,
+        salePercentage: payload.salePercentage,
+        consumptionTaxPercentage: payload.consumptionTaxPercentage,
+        wholesaleSalePercentage: payload.wholesaleSalePercentage,
+        specialSalePercentage: payload.specialSalePercentage,
+        iva: payload.iva
+      });
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error actualizando producto");
+    }
+  };
+
+  const handleKeyDownUpdate = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === "Tab") {
+      void updateProductInBackend();
+    }
+  };
+
+  const fillProductForm = (product: Product) => {
+    setSelectedProduct(product);
+    setForm((prev) => ({
+      ...prev,
+      productId: product.id,
+      productName: product.name,
+      salePercent: String(product.salePercentage ?? ""),
+      originalSalePercent: String(product.salePercentage ?? ""),
+      consumptionTax: String(product.consumptionTaxPercentage ?? ""),
+      wholesaleSale: String(product.wholesaleSalePercentage ?? ""),
+      specialSale: String(product.specialSalePercentage ?? ""),
+      stock: String(product.stock ?? "0"),
+      iva: String(product.iva ?? "19"),
+      productCreatedAt: product.createdAt ? new Date(product.createdAt).toISOString().split('T')[0] : "",
+    }));
+  };
+
+  const currentIva = Number(form.iva) / 100;
 
   return (
     <Protected permission="compras">
@@ -324,142 +415,216 @@ export default function ComprasPage() {
             </div>
           </div>
 
-          <div className="form-row-scroll w-full">
-            <div className="form-row-grid min-w-[1100px]">
-              <input
-                className="min-w-[180px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="Código interno"
-                value={form.internalProductCode ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    internalProductCode: event.target.value,
-                  }))
-                }
-                onKeyDown={async (event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    const term = event.currentTarget.value.trim();
-                    if (!term) {
-                      setProductSearch("");
-                      setProductModalOpen(true);
-                      loadProducts().catch(() => {});
-                      return;
-                    }
-                    const result = await loadProducts(term);
-                    const exact = result.find(
-                      (product) => String(product.internalProductCode) === term
-                    );
-                    if (exact) {
+          <ResizableInputGroup
+            columns={[
+              {
+                id: "code",
+                label: "Código interno",
+                initialWidth: 180,
+                content: (
+                  <input
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    placeholder="Código"
+                    value={form.internalProductCode ?? ""}
+                    onChange={(event) =>
                       setForm((prev) => ({
                         ...prev,
-                        productId: exact.id,
-                        productName: exact.name,
-                        salePercent: String(exact.salePercentage ?? ""),
-                        originalSalePercent: String(exact.salePercentage ?? ""),
-                      }));
-                    } else {
-                      setProductSearch(term);
-                      setProductModalOpen(true);
-                      loadProducts(term).catch(() => {});
+                        internalProductCode: event.target.value,
+                      }))
                     }
-                  }
-                }}
-              />
-              <input
-                className="min-w-[220px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="Nombre producto"
-                value={form.productName ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    productName: event.target.value,
-                  }))
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    const term = event.currentTarget.value.trim();
-                    setProductSearch(term);
-                    setProductModalOpen(true);
-                    if (term) {
-                      loadProducts(term).catch(() => {});
-                    } else {
-                      loadProducts().catch(() => {});
+                    onKeyDown={async (event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        const term = event.currentTarget.value.trim();
+                        if (!term) {
+                          setProductSearch("");
+                          setProductModalOpen(true);
+                          loadProducts().catch(() => { });
+                          return;
+                        }
+                        const result = await loadProducts(term);
+                        const exact = result.find(
+                          (product) => String(product.internalProductCode) === term
+                        );
+                        if (exact) {
+                          fillProductForm(exact);
+                        } else {
+                          setProductSearch(term);
+                          setProductModalOpen(true);
+                          loadProducts(term).catch(() => { });
+                        }
+                      }
+                    }}
+                  />
+                ),
+              },
+              {
+                id: "name",
+                label: "Nombre producto",
+                initialWidth: 220,
+                content: (
+                  <input
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    placeholder="Nombre"
+                    value={form.productName ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        productName: event.target.value,
+                      }))
                     }
-                  }
-                }}
-              />
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        const term = event.currentTarget.value.trim();
+                        setProductSearch(term);
+                        setProductModalOpen(true);
+                        if (term) {
+                          loadProducts(term).catch(() => { });
+                        } else {
+                          loadProducts().catch(() => { });
+                        }
+                      }
+                    }}
+                  />
+                ),
+              },
+              {
+                id: "qty",
+                label: "Cantidad",
+                initialWidth: 120,
+                content: (
+                  <input
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    placeholder="0"
+                    type="number"
+                    value={form.quantity ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        quantity: event.target.value,
+                      }))
+                    }
+                  />
+                ),
+              },
+              {
+                id: "cost",
+                label: "Costo",
+                initialWidth: 140,
+                content: (
+                  <input
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    placeholder="0.00"
+                    type="number"
+                    value={form.cost ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, cost: event.target.value }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        void handleAddItem();
+                      }
+                    }}
+                  />
+                ),
+              },
+              {
+                id: "val",
+                label: "Valor + IVA",
+                initialWidth: 140,
+                content: (
+                  <input
+                    className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                    value={
+                      form.cost
+                        ? (Number(form.cost) * (1 + currentIva)).toFixed(2)
+                        : ""
+                    }
+                    readOnly
+                    tabIndex={-1}
+                  />
+                ),
+              },
+              {
+                id: "total",
+                label: "Total",
+                initialWidth: 160,
+                content: (
+                  <input
+                    className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                    value={
+                      form.cost && form.quantity
+                        ? (
+                          Number(form.cost) *
+                          (1 + currentIva) *
+                          Number(form.quantity)
+                        ).toFixed(2)
+                        : ""
+                    }
+                    readOnly
+                    tabIndex={-1}
+                  />
+                ),
+              },
+            ]}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-zinc-500 uppercase">Stock</label>
               <input
-                className="min-w-[120px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="Cantidad"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 type="number"
-                value={form.quantity ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, quantity: event.target.value }))
-                }
+                min={0}
+                value={form.stock}
+                onChange={(e) => setForm(prev => ({ ...prev, stock: e.target.value }))}
+                onBlur={() => void updateProductInBackend()}
+                onKeyDown={handleKeyDownUpdate}
               />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-zinc-500 uppercase">% Venta</label>
               <input
-                className="min-w-[140px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="Costo"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 type="number"
-                value={form.cost ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, cost: event.target.value }))
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    void handleAddItem();
-                  }
-                }}
-              />
-              <input
-                className="min-w-[140px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="Valor"
-                value={
-                  form.cost
-                    ? (Number(form.cost) * (1 + IVA)).toFixed(2)
-                    : ""
-                }
-                readOnly
-              />
-              <input
-                className="min-w-[160px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="Total"
-                value={
-                  form.cost && form.quantity
-                    ? (
-                        Number(form.cost) *
-                        (1 + IVA) *
-                        Number(form.quantity)
-                      ).toFixed(2)
-                    : ""
-                }
-                readOnly
-              />
-              <input
-                className="min-w-[120px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                placeholder="% venta"
-                type="number"
-                min={1}
+                min={0}
                 max={100}
-                value={form.salePercent ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    salePercent: event.target.value,
-                  }))
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    void handleAddItem();
-                  }
-                }}
+                value={form.salePercent}
+                onChange={(e) => setForm(prev => ({ ...prev, salePercent: e.target.value }))}
+                onBlur={() => void updateProductInBackend()}
+                onKeyDown={handleKeyDownUpdate}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-zinc-500 uppercase">% Venta Mayor</label>
+              <input
+                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                type="number"
+                min={0}
+                max={100}
+                value={form.wholesaleSale}
+                onChange={(e) => setForm(prev => ({ ...prev, wholesaleSale: e.target.value }))}
+                onBlur={() => void updateProductInBackend()}
+                onKeyDown={handleKeyDownUpdate}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-zinc-500 uppercase">% Venta Especial</label>
+              <input
+                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                type="number"
+                min={0}
+                max={100}
+                value={form.specialSale}
+                onChange={(e) => setForm(prev => ({ ...prev, specialSale: e.target.value }))}
+                onBlur={() => void updateProductInBackend()}
+                onKeyDown={handleKeyDownUpdate}
               />
             </div>
           </div>
+
           <div className="md:col-span-3">
             <button className="btn-primary" disabled={items.length === 0}>
               Registrar compra
@@ -497,15 +662,14 @@ export default function ComprasPage() {
               </thead>
               <tbody>
                 {items.map((item, index) => {
-                  const valor = item.cost * (1 + IVA);
+                  const valor = item.cost * (1 + currentIva);
                   const total = valor * item.quantity;
                   const hasInvalidCode = item.internalProductCode <= 0;
                   return (
                     <tr
                       key={`${item.productId}-${index}`}
-                      className={`border-t text-zinc-800 ${
-                        hasInvalidCode ? "bg-rose-50 text-rose-700" : ""
-                      }`}
+                      className={`border-t text-zinc-800 ${hasInvalidCode ? "bg-rose-50 text-rose-700" : ""
+                        }`}
                     >
                       <td className="px-3 py-2">{item.productName}</td>
                       <td className="px-3 py-2">
@@ -668,7 +832,7 @@ export default function ComprasPage() {
               <div className="mt-3">
                 <input
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                  placeholder="Busca por nombre, SKU, códigos o descripción"
+                  placeholder="Busca por nombre, códigos o descripción"
                   value={productSearch}
                   onChange={(event) => setProductSearch(event.target.value)}
                 />
@@ -679,20 +843,13 @@ export default function ComprasPage() {
                   <button
                     key={product.id}
                     onClick={() => {
-                      setForm((prev) => ({
-                        ...prev,
-                        productId: product.id,
-                        internalProductCode: String(product.internalProductCode),
-                        productName: product.name,
-                          salePercent: String(product.salePercentage ?? ""),
-                          originalSalePercent: String(product.salePercentage ?? ""),
-                      }));
+                      fillProductForm(product);
                       setProductModalOpen(false);
                     }}
                     className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
                   >
                     <span className="font-medium text-zinc-900">
-                      {product.name} ({product.sku})
+                      {product.name}
                     </span>
                     <span className="text-xs text-zinc-500">
                       Cod. interno: {product.internalProductCode} · Cod. prov:{" "}

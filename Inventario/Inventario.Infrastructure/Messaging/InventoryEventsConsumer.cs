@@ -47,6 +47,7 @@ public sealed class InventoryEventsConsumer : BackgroundService
         _channel.ExchangeDeclare(_options.Exchange, ExchangeType.Topic, durable: true);
         _channel.QueueDeclare(_options.Queue, durable: true, exclusive: false, autoDelete: false);
         _channel.QueueBind(_options.Queue, _options.Exchange, "product.created");
+        _channel.QueueBind(_options.Queue, _options.Exchange, "product.updated");
         _channel.QueueBind(_options.Queue, _options.Exchange, "stock.received");
         _channel.QueueBind(_options.Queue, _options.Exchange, "sale.completed");
 
@@ -82,6 +83,16 @@ public sealed class InventoryEventsConsumer : BackgroundService
                 if (message is not null)
                 {
                     await stockService.CreateForProductAsync(message.ProductId, cancellationToken);
+                }
+
+                break;
+            }
+            case "product.updated":
+            {
+                var message = JsonSerializer.Deserialize<ProductUpdated>(body);
+                if (message is not null)
+                {
+                    await stockService.SetAsync(message.ProductId, message.Stock, cancellationToken);
                 }
 
                 break;

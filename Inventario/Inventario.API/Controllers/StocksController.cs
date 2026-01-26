@@ -64,4 +64,16 @@ public sealed class StocksController : ControllerBase
 
         return Ok(stock);
     }
+
+    [HttpPut("{productId:guid}/set")]
+    public async Task<ActionResult<StockDto>> Set(Guid productId, AdjustStockRequest request, CancellationToken cancellationToken)
+    {
+        var stock = await _stockService.SetAsync(productId, request.Quantity, cancellationToken);
+        if (stock is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(stock);
+    }
 }

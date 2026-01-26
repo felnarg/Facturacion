@@ -5,7 +5,10 @@ public sealed record CreateProductRequest(
     string Description,
     decimal Price,
     int Stock,
-    string Sku,
     int SupplierProductCode,
     int InternalProductCode,
-    decimal SalePercentage = 30m);
+    decimal SalePercentage = 30m,
+    decimal ConsumptionTaxPercentage = 0m,
+    decimal WholesaleSalePercentage = 25m,
+    decimal SpecialSalePercentage = 20m,
+    decimal Iva = 19m);

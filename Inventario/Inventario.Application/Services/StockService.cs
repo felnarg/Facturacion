@@ -65,6 +65,19 @@ public sealed class StockService : IStockService
         return Map(stock);
     }
 
+    public async Task<StockDto?> SetAsync(Guid productId, int quantity, CancellationToken cancellationToken = default)
+    {
+        var stock = await _repository.GetByProductIdAsync(productId, cancellationToken);
+        if (stock is null)
+        {
+            return null;
+        }
+
+        stock.SetQuantity(quantity);
+        await _repository.UpdateAsync(stock, cancellationToken);
+        return Map(stock);
+    }
+
     private static StockDto Map(Stock stock)
     {
         return new StockDto(
