@@ -86,6 +86,7 @@ export default function ComprasPage() {
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
+  const [updating, setUpdating] = useState<string | null>(null);
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -300,8 +301,11 @@ export default function ComprasPage() {
     await loadPurchases();
   };
 
-  const updateProductInBackend = async () => {
+  const updateProductInBackend = async (field: string) => {
     if (!selectedProduct) return;
+
+    setUpdating(field);
+
     try {
       const payload = {
         name: selectedProduct.name,
@@ -337,14 +341,20 @@ export default function ComprasPage() {
         iva: payload.iva
       });
 
+      // Hide the updating indicator after 1 second
+      setTimeout(() => {
+        setUpdating(null);
+      }, 1000);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error actualizando producto");
+      setUpdating(null);
     }
   };
 
-  const handleKeyDownUpdate = (e: React.KeyboardEvent) => {
+  const handleKeyDownUpdate = (e: React.KeyboardEvent, field: string) => {
     if (e.key === "Enter" || e.key === "Tab") {
-      void updateProductInBackend();
+      void updateProductInBackend(field);
     }
   };
 
@@ -353,7 +363,9 @@ export default function ComprasPage() {
     setForm((prev) => ({
       ...prev,
       productId: product.id,
+      internalProductCode: String(product.internalProductCode),
       productName: product.name,
+      cost: String(product.price ?? ""),
       salePercent: String(product.salePercentage ?? ""),
       originalSalePercent: String(product.salePercentage ?? ""),
       consumptionTax: String(product.consumptionTaxPercentage ?? ""),
@@ -573,19 +585,33 @@ export default function ComprasPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase">Stock</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase flex items-center gap-2">
+                Stock
+                {updating === 'stock' && (
+                  <span className="text-[10px] font-medium text-emerald-600 animate-pulse">
+                    actualizando
+                  </span>
+                )}
+              </label>
               <input
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 type="number"
                 min={0}
                 value={form.stock}
                 onChange={(e) => setForm(prev => ({ ...prev, stock: e.target.value }))}
-                onBlur={() => void updateProductInBackend()}
-                onKeyDown={handleKeyDownUpdate}
+                onBlur={() => void updateProductInBackend('stock')}
+                onKeyDown={(e) => handleKeyDownUpdate(e, 'stock')}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase">% Venta</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase flex items-center gap-2">
+                % Venta
+                {updating === 'salePercent' && (
+                  <span className="text-[10px] font-medium text-emerald-600 animate-pulse">
+                    actualizando
+                  </span>
+                )}
+              </label>
               <input
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 type="number"
@@ -593,12 +619,19 @@ export default function ComprasPage() {
                 max={100}
                 value={form.salePercent}
                 onChange={(e) => setForm(prev => ({ ...prev, salePercent: e.target.value }))}
-                onBlur={() => void updateProductInBackend()}
-                onKeyDown={handleKeyDownUpdate}
+                onBlur={() => void updateProductInBackend('salePercent')}
+                onKeyDown={(e) => handleKeyDownUpdate(e, 'salePercent')}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase">% Venta Mayor</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase flex items-center gap-2">
+                % Venta Mayor
+                {updating === 'wholesaleSale' && (
+                  <span className="text-[10px] font-medium text-emerald-600 animate-pulse">
+                    actualizando
+                  </span>
+                )}
+              </label>
               <input
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 type="number"
@@ -606,12 +639,19 @@ export default function ComprasPage() {
                 max={100}
                 value={form.wholesaleSale}
                 onChange={(e) => setForm(prev => ({ ...prev, wholesaleSale: e.target.value }))}
-                onBlur={() => void updateProductInBackend()}
-                onKeyDown={handleKeyDownUpdate}
+                onBlur={() => void updateProductInBackend('wholesaleSale')}
+                onKeyDown={(e) => handleKeyDownUpdate(e, 'wholesaleSale')}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase">% Venta Especial</label>
+              <label className="text-xs font-semibold text-zinc-500 uppercase flex items-center gap-2">
+                % Venta Especial
+                {updating === 'specialSale' && (
+                  <span className="text-[10px] font-medium text-emerald-600 animate-pulse">
+                    actualizando
+                  </span>
+                )}
+              </label>
               <input
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 type="number"
@@ -619,8 +659,8 @@ export default function ComprasPage() {
                 max={100}
                 value={form.specialSale}
                 onChange={(e) => setForm(prev => ({ ...prev, specialSale: e.target.value }))}
-                onBlur={() => void updateProductInBackend()}
-                onKeyDown={handleKeyDownUpdate}
+                onBlur={() => void updateProductInBackend('specialSale')}
+                onKeyDown={(e) => handleKeyDownUpdate(e, 'specialSale')}
               />
             </div>
           </div>
