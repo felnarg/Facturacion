@@ -43,16 +43,16 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductDto>> Create(CreateProductRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductRequest dto, CancellationToken cancellationToken)
     {
-        var product = await _productService.CreateAsync(request, cancellationToken);
+        var product = await _productService.CreateAsync(dto, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<ProductDto>> Update(Guid id, UpdateProductRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProductDto>> Update(Guid id, [FromBody] UpdateProductRequest dto, CancellationToken cancellationToken)
     {
-        var product = await _productService.UpdateAsync(id, request, cancellationToken);
+        var product = await _productService.UpdateAsync(id, dto, cancellationToken);
         if (product is null)
         {
             return NotFound();

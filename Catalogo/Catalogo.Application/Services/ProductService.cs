@@ -56,7 +56,6 @@ public sealed class ProductService : IProductService
         var createdEvent = new ProductCreated(
             product.Id,
             product.Name,
-            string.Empty,
             product.Price,
             product.Stock);
 
@@ -90,7 +89,6 @@ public sealed class ProductService : IProductService
         var updatedEvent = new ProductUpdated(
             product.Id,
             product.Name,
-            string.Empty,
             product.Price,
             product.Stock);
 

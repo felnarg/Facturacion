@@ -32,7 +32,6 @@ public sealed class ProductRepository : IProductRepository
             query = query.Where(product =>
                 product.Name.ToLower().Contains(term) ||
                 product.Description.ToLower().Contains(term) ||
-                product.Sku.ToLower().Contains(term) ||
                 product.SupplierProductCode.ToString().Contains(term) ||
                 product.InternalProductCode.ToString().Contains(term));
         }

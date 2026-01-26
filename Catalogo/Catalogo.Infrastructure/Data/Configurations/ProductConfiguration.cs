@@ -19,10 +19,6 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(product => product.Description)
             .HasMaxLength(1000);
 
-        builder.Property(product => product.Sku)
-            .HasMaxLength(50)
-            .IsRequired();
-
         builder.Property(product => product.SupplierProductCode)
             .IsRequired();
 
@@ -32,6 +28,26 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(product => product.SalePercentage)
             .HasColumnType("decimal(5,2)")
             .HasDefaultValue(30m)
+            .IsRequired();
+
+        builder.Property(product => product.ConsumptionTaxPercentage)
+            .HasColumnType("decimal(5,2)")
+            .HasDefaultValue(0m)
+            .IsRequired();
+
+        builder.Property(product => product.WholesaleSalePercentage)
+            .HasColumnType("decimal(5,2)")
+            .HasDefaultValue(25m)
+            .IsRequired();
+
+        builder.Property(product => product.SpecialSalePercentage)
+            .HasColumnType("decimal(5,2)")
+            .HasDefaultValue(20m)
+            .IsRequired();
+
+        builder.Property(product => product.Iva)
+            .HasColumnType("decimal(5,2)")
+            .HasDefaultValue(19m)
             .IsRequired();
 
         builder.Property(product => product.Price)
@@ -56,10 +72,13 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Description = "Producto de ejemplo para el catalogo",
                 Price = 19.99m,
                 Stock = 100,
-                Sku = "SKU-BASE-001",
                 SupplierProductCode = 11001,
                 InternalProductCode = 50001,
                 SalePercentage = 30m,
+                ConsumptionTaxPercentage = 0m,
+                WholesaleSalePercentage = 25m,
+                SpecialSalePercentage = 20m,
+                Iva = 19m,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             },
@@ -70,10 +89,13 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Description = "Producto premium de ejemplo",
                 Price = 79.99m,
                 Stock = 50,
-                Sku = "SKU-PREM-002",
                 SupplierProductCode = 11002,
                 InternalProductCode = 50002,
                 SalePercentage = 25m,
+                ConsumptionTaxPercentage = 0m,
+                WholesaleSalePercentage = 25m,
+                SpecialSalePercentage = 20m,
+                Iva = 19m,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             });

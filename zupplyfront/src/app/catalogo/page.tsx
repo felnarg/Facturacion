@@ -26,16 +26,23 @@ type Product = {
 const emptyForm = {
   name: "",
   description: "",
-  price: "",
-  stock: "",
+  price: "0",
+  stock: "0",
   supplierProductCode: "",
   internalProductCode: "",
-  salePercentage: "",
-  consumptionTaxPercentage: "",
-  wholesaleSalePercentage: "",
-  specialSalePercentage: "",
+  salePercentage: "30",
+  consumptionTaxPercentage: "0",
+  wholesaleSalePercentage: "25",
+  specialSalePercentage: "20",
   iva: "19",
 };
+
+
+function safeNumber(value: string | number | undefined | null, defaultValue = 0): number {
+  if (value === null || value === undefined || value === "") return defaultValue;
+  const num = Number(value);
+  return isNaN(num) ? defaultValue : num;
+}
 
 export default function CatalogoPage() {
   const { user } = useAuth();
@@ -80,18 +87,20 @@ export default function CatalogoPage() {
     event.preventDefault();
     setError("");
 
+    // Explicitly construct payload with safe number conversion
+    // Matching CreateProductRequest.cs properties (camelCase for JSON)
     const payload = {
       name: form.name,
       description: form.description,
-      price: Number(form.price),
-      stock: Number(form.stock),
-      supplierProductCode: Number(form.supplierProductCode),
-      internalProductCode: Number(form.internalProductCode),
-      salePercentage: Number(form.salePercentage),
-      consumptionTaxPercentage: Number(form.consumptionTaxPercentage),
-      wholesaleSalePercentage: Number(form.wholesaleSalePercentage),
-      specialSalePercentage: Number(form.specialSalePercentage),
-      iva: Number(form.iva),
+      price: safeNumber(form.price),
+      stock: safeNumber(form.stock),
+      supplierProductCode: safeNumber(form.supplierProductCode),
+      internalProductCode: safeNumber(form.internalProductCode),
+      salePercentage: safeNumber(form.salePercentage),
+      consumptionTaxPercentage: safeNumber(form.consumptionTaxPercentage),
+      wholesaleSalePercentage: safeNumber(form.wholesaleSalePercentage),
+      specialSalePercentage: safeNumber(form.specialSalePercentage),
+      iva: safeNumber(form.iva),
     };
 
     try {
@@ -122,6 +131,8 @@ export default function CatalogoPage() {
       setError(err instanceof Error ? err.message : "Error guardando producto");
     }
   };
+
+
 
   const handleEdit = (product: Product) => {
     setEditing(product);
@@ -168,6 +179,8 @@ export default function CatalogoPage() {
           className="dev-block-container grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-2"
         >
           <DevBlockHeader label="tomillo" />
+
+          {/* 1. Nombre */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Nombre"
@@ -177,6 +190,8 @@ export default function CatalogoPage() {
             }
             required
           />
+
+          {/* 2. Codigo interno */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Código interno"
@@ -190,16 +205,23 @@ export default function CatalogoPage() {
             }
             required
           />
+
+          {/* 3. Codigo producto (Old: Codigo proveedor) */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Precio"
+            placeholder="Código producto"
             type="number"
-            value={form.price}
+            value={form.supplierProductCode}
             onChange={(event) =>
-              setForm((prev) => ({ ...prev, price: event.target.value }))
+              setForm((prev) => ({
+                ...prev,
+                supplierProductCode: event.target.value,
+              }))
             }
             required
           />
+
+          {/* 4. Stock */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Stock"
@@ -210,18 +232,20 @@ export default function CatalogoPage() {
             }
             required
           />
+
+          {/* (Maintain Price even if not in user list) */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Venta"
+            placeholder="Precio"
             type="number"
-            min={0}
-            max={100}
-            value={form.salePercentage}
+            value={form.price}
             onChange={(event) =>
-              setForm((prev) => ({ ...prev, salePercentage: event.target.value }))
+              setForm((prev) => ({ ...prev, price: event.target.value }))
             }
             required
           />
+
+          {/* 5. imp consumo */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="% Imp. Consumo"
@@ -234,30 +258,8 @@ export default function CatalogoPage() {
             }
             required
           />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Venta Mayor"
-            type="number"
-            min={0}
-            max={100}
-            value={form.wholesaleSalePercentage}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, wholesaleSalePercentage: event.target.value }))
-            }
-            required
-          />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="% Venta Especial"
-            type="number"
-            min={0}
-            max={100}
-            value={form.specialSalePercentage}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, specialSalePercentage: event.target.value }))
-            }
-            required
-          />
+
+          {/* 6. iva */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="% IVA"
@@ -270,20 +272,50 @@ export default function CatalogoPage() {
             }
             required
           />
+
+          {/* 7. % venta */}
           <input
             className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Código proveedor"
+            placeholder="% Venta"
             type="number"
-            value={form.supplierProductCode}
+            min={0}
+            max={100}
+            value={form.salePercentage}
             onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                supplierProductCode: event.target.value,
-              }))
+              setForm((prev) => ({ ...prev, salePercentage: event.target.value }))
             }
             required
           />
 
+          {/* 8. % venta mayor */}
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="% Venta Mayor"
+            type="number"
+            min={0}
+            max={100}
+            value={form.wholesaleSalePercentage}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, wholesaleSalePercentage: event.target.value }))
+            }
+            required
+          />
+
+          {/* 9. % venta especial */}
+          <input
+            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+            placeholder="% Venta Especial"
+            type="number"
+            min={0}
+            max={100}
+            value={form.specialSalePercentage}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, specialSalePercentage: event.target.value }))
+            }
+            required
+          />
+
+          {/* 10. Descripción */}
           <textarea
             className="md:col-span-2 rounded-md border border-zinc-200 px-3 py-2 text-sm"
             placeholder="Descripción"
@@ -300,6 +332,7 @@ export default function CatalogoPage() {
               }
             }}
           />
+
           <div className="md:col-span-2 flex items-center gap-3">
             <button type="submit" className="btn-primary">
               {editing ? "Actualizar" : "Crear"}
@@ -328,7 +361,7 @@ export default function CatalogoPage() {
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Cod. Prov</th>
+                <th className="px-4 py-3">Cod. Prod</th>
                 <th className="px-4 py-3">Cod. Interno</th>
                 <th className="px-4 py-3">Precio</th>
                 <th className="px-4 py-3">% Venta</th>
@@ -433,7 +466,7 @@ export default function CatalogoPage() {
                       {product.name}
                     </span>
                     <span className="text-xs text-zinc-500">
-                      Prov: {product.supplierProductCode} · Interno:{" "}
+                      Prod: {product.supplierProductCode} · Interno:{" "}
                       {product.internalProductCode}
                     </span>
                     <span className="text-xs text-zinc-400">

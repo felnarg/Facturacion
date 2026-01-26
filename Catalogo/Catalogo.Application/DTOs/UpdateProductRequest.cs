@@ -1,14 +1,16 @@
 namespace Catalogo.Application.DTOs;
 
-public sealed record UpdateProductRequest(
-    string Name,
-    string Description,
-    decimal Price,
-    int Stock,
-    int SupplierProductCode,
-    int InternalProductCode,
-    decimal SalePercentage = 30m,
-    decimal ConsumptionTaxPercentage = 0m,
-    decimal WholesaleSalePercentage = 25m,
-    decimal SpecialSalePercentage = 20m,
-    decimal Iva = 19m);
+public sealed class UpdateProductRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int Stock { get; set; }
+    public int SupplierProductCode { get; set; }
+    public int InternalProductCode { get; set; }
+    public decimal SalePercentage { get; set; } = 30m;
+    public decimal ConsumptionTaxPercentage { get; set; } = 0m;
+    public decimal WholesaleSalePercentage { get; set; } = 25m;
+    public decimal SpecialSalePercentage { get; set; } = 20m;
+    public decimal Iva { get; set; } = 19m;
+}
