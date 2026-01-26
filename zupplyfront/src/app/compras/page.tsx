@@ -91,6 +91,8 @@ export default function ComprasPage() {
   // Refs for focus management
   const supplierInputRef = useRef<HTMLInputElement>(null);
   const productNameInputRef = useRef<HTMLInputElement>(null);
+  const internalCodeInputRef = useRef<HTMLInputElement>(null);
+  const quantityInputRef = useRef<HTMLInputElement>(null);
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -294,6 +296,9 @@ export default function ComprasPage() {
       productCreatedAt: "",
     }));
     setSelectedProduct(null);
+
+    // Focus back to internal code input
+    setTimeout(() => internalCodeInputRef.current?.focus(), 0);
   };
 
   const markReceived = async (id: string) => {
@@ -451,6 +456,7 @@ export default function ComprasPage() {
                 initialWidth: 180,
                 content: (
                   <input
+                    ref={internalCodeInputRef}
                     className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                     placeholder="Código"
                     value={form.internalProductCode ?? ""}
@@ -524,6 +530,7 @@ export default function ComprasPage() {
                 initialWidth: 120,
                 content: (
                   <input
+                    ref={quantityInputRef}
                     className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                     placeholder="0"
                     type="number"
@@ -551,8 +558,18 @@ export default function ComprasPage() {
                       setForm((prev) => ({ ...prev, cost: event.target.value }))
                     }
                     onKeyDown={(event) => {
-                      if (event.key === "Enter") {
+                      if (event.key === "Enter" || event.key === "Tab") {
                         event.preventDefault();
+
+                        // Check if quantity is valid
+                        const quantity = Number(form.quantity);
+                        if (!quantity || quantity <= 0) {
+                          // Focus quantity input if it's empty or zero
+                          setTimeout(() => quantityInputRef.current?.focus(), 0);
+                          return;
+                        }
+
+                        // Add item if quantity is valid
                         void handleAddItem();
                       }
                     }}
