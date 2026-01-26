@@ -397,19 +397,30 @@ export default function ComprasPage() {
           <div className="grid w-full gap-3 md:grid-cols-2">
             <div className="flex items-center gap-2">
               <input
-                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                 placeholder="Proveedor"
                 value={form.supplierName}
-                readOnly
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    supplierName: event.target.value,
+                  }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    const term = event.currentTarget.value.trim();
+                    setSupplierSearch(term);
+                    setSupplierModalOpen(true);
+                    if (term) {
+                      loadSuppliers(term).catch(() => { });
+                    } else {
+                      loadSuppliers().catch(() => { });
+                    }
+                  }
+                }}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setSupplierModalOpen(true)}
-                className="btn-secondary text-xs"
-              >
-                Seleccionar
-              </button>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -813,6 +824,7 @@ export default function ComprasPage() {
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
                   placeholder="Buscar por nombre, contacto, email o teléfono"
                   value={supplierSearch}
+                  autoFocus
                   onChange={(event) => setSupplierSearch(event.target.value)}
                 />
               </div>
@@ -874,6 +886,7 @@ export default function ComprasPage() {
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
                   placeholder="Busca por nombre, códigos o descripción"
                   value={productSearch}
+                  autoFocus
                   onChange={(event) => setProductSearch(event.target.value)}
                 />
               </div>
