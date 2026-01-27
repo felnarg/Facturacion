@@ -36,7 +36,6 @@ type Sale = {
 
 export default function VentasPage() {
   const { user } = useAuth();
-  const [sales, setSales] = useState<Sale[]>([]);
   const [items, setItems] = useState<SaleItem[]>([]);
 
   // Form State
@@ -59,30 +58,7 @@ export default function VentasPage() {
   const productInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const loadSales = async () => {
-    const data = await apiRequest<Sale[]>(
-      "/api/sales",
-      undefined,
-      user.token
-    );
-    setSales(data);
-  };
 
-  const loadProducts = async (search?: string) => {
-    const query = search ? `?search=${encodeURIComponent(search)}` : "";
-    const data = await apiRequest<Product[]>(
-      `/api/catalog/products${query}`,
-      undefined,
-      user.token
-    );
-    setProducts(data);
-  };
-
-  useEffect(() => {
-    loadSales().catch((err) =>
-      setError(err instanceof Error ? err.message : "Error cargando ventas")
-    );
-  }, []);
 
   // Search Modal Effect
   useEffect(() => {
@@ -147,6 +123,18 @@ export default function VentasPage() {
     setTimeout(() => quantityInputRef.current?.focus(), 0);
   };
 
+  const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+
+  const loadProducts = async (search?: string) => {
+    const query = search ? `?search=${encodeURIComponent(search)}` : "";
+    const data = await apiRequest<Product[]>(
+      `/api/catalog/products${query}`,
+      undefined,
+      user.token
+    );
+    setProducts(data);
+  };
+
   const addItem = () => {
     if (!selectedProduct || !quantity || Number(quantity) <= 0) {
       return;
@@ -196,7 +184,6 @@ export default function VentasPage() {
         user.token
       );
       setItems([]);
-      await loadSales();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creando venta");
     }
@@ -219,20 +206,30 @@ export default function VentasPage() {
           </h3>
 
           <div className="mt-4 flex flex-col gap-4">
-            {/* Row 1: Type of Sale (Global) */}
-            <div className="w-full md:w-1/4">
-              <label className="mb-1 block text-xs font-medium text-zinc-500">
-                Tipo Venta
-              </label>
-              <select
-                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-                value={saleType}
-                onChange={(e) => setSaleType(e.target.value as 'detal' | 'mayor' | 'especial')}
-              >
-                <option value="detal">Detal</option>
-                <option value="mayor">Mayor</option>
-                <option value="especial">Especial</option>
-              </select>
+            {/* Row 1: Type of Sale (Global) & Total */}
+            <div className="flex w-full items-end justify-between gap-4">
+              <div className="w-full md:w-1/4">
+                <label className="mb-1 block text-xs font-medium text-zinc-500">
+                  Tipo Venta
+                </label>
+                <select
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                  value={saleType}
+                  onChange={(e) => setSaleType(e.target.value as 'detal' | 'mayor' | 'especial')}
+                >
+                  <option value="detal">Detal</option>
+                  <option value="mayor">Mayor</option>
+                  <option value="especial">Especial</option>
+                </select>
+              </div>
+
+              {/* Grand Total Display */}
+              <div className="flex flex-col items-end mr-50">
+                <span className="text-xs font-medium uppercase text-zinc-500 tracking-wider">Total Venta</span>
+                <span className="text-3xl font-bold text-zinc-900 drop-shadow-sm">
+                  ${grandTotal.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
             </div>
 
             {/* Row 2: Item Inputs */}
@@ -342,49 +339,7 @@ export default function VentasPage() {
           {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
         </div>
 
-        <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <DevBlockHeader label="pizarra" />
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
-              <tr>
-                <th className="px-4 py-3">Producto</th>
-                <th className="px-4 py-3">Cantidad</th>
-                <th className="px-4 py-3">Venta</th>
-                <th className="px-4 py-3">Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sales.flatMap((sale) =>
-                sale.items.map((item, index) => (
-                  <tr key={`${sale.id}-${index}`} className="border-t border-zinc-100">
-                    <td className="px-4 py-3">
-                      {item.productName || item.productId}
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.quantity}
-                    </td>
-                    <td className="px-4 py-3">
-                      {sale.id.slice(0, 8)}...
-                    </td>
-                    <td className="px-4 py-3">
-                      {new Date(sale.createdAt).toLocaleDateString()} {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                  </tr>
-                ))
-              )}
-              {sales.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-6 text-center text-sm text-zinc-500"
-                  >
-                    No hay ventas registradas.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+
 
         {/* Product Search Modal */}
         {isProductModalOpen && (
