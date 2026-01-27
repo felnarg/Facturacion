@@ -111,9 +111,9 @@ export default function CatalogoPage() {
       name: form.name,
       description: form.description,
       price: safeNumber(form.price),
-      stock: safeNumber(form.stock),
-      supplierProductCode: safeNumber(form.supplierProductCode),
-      internalProductCode: safeNumber(form.internalProductCode),
+      stock: parseInt(String(form.stock || 0), 10), // Ensure integer
+      supplierProductCode: parseInt(String(form.supplierProductCode || 0), 10), // Ensure integer
+      internalProductCode: parseInt(String(form.internalProductCode || 0), 10), // Ensure integer
       salePercentage: safeNumber(form.salePercentage),
       consumptionTaxPercentage: safeNumber(form.consumptionTaxPercentage),
       wholesaleSalePercentage: safeNumber(form.wholesaleSalePercentage),

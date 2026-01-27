@@ -37,4 +37,10 @@ public sealed class StockRepository : IStockRepository
         _dbContext.Stocks.Update(stock);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task AddMovementAsync(StockMovement movement, CancellationToken cancellationToken = default)
+    {
+        _dbContext.StockMovements.Add(movement);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

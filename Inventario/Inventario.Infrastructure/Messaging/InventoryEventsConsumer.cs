@@ -102,7 +102,7 @@ public sealed class InventoryEventsConsumer : BackgroundService
                 var message = JsonSerializer.Deserialize<StockReceived>(body);
                 if (message is not null)
                 {
-                    await stockService.IncreaseAsync(message.ProductId, message.Quantity, cancellationToken);
+                    await stockService.IncreaseAsync(message.ProductId, message.Quantity, message.PurchaseId, cancellationToken);
                 }
 
                 break;
@@ -114,7 +114,7 @@ public sealed class InventoryEventsConsumer : BackgroundService
                 {
                     foreach (var item in message.Items)
                     {
-                        await stockService.DecreaseAsync(item.ProductId, item.Quantity, cancellationToken);
+                        await stockService.DecreaseAsync(item.ProductId, item.Quantity, message.SaleId, cancellationToken);
                     }
                 }
 

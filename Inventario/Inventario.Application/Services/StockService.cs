@@ -36,10 +36,14 @@ public sealed class StockService : IStockService
 
         var stock = new Stock(productId);
         await _repository.AddAsync(stock, cancellationToken);
+        
+        var movement = new StockMovement(productId, StockMovementType.Creation, 0, null);
+        await _repository.AddMovementAsync(movement, cancellationToken);
+        
         return Map(stock);
     }
 
-    public async Task<StockDto?> IncreaseAsync(Guid productId, int quantity, CancellationToken cancellationToken = default)
+    public async Task<StockDto?> IncreaseAsync(Guid productId, int quantity, Guid? referenceId, CancellationToken cancellationToken = default)
     {
         var stock = await _repository.GetByProductIdAsync(productId, cancellationToken);
         if (stock is null)
@@ -49,10 +53,14 @@ public sealed class StockService : IStockService
 
         stock.Increase(quantity);
         await _repository.UpdateAsync(stock, cancellationToken);
+
+        var movement = new StockMovement(productId, StockMovementType.Purchase, quantity, referenceId);
+        await _repository.AddMovementAsync(movement, cancellationToken);
+
         return Map(stock);
     }
 
-    public async Task<StockDto?> DecreaseAsync(Guid productId, int quantity, CancellationToken cancellationToken = default)
+    public async Task<StockDto?> DecreaseAsync(Guid productId, int quantity, Guid? referenceId, CancellationToken cancellationToken = default)
     {
         var stock = await _repository.GetByProductIdAsync(productId, cancellationToken);
         if (stock is null)
@@ -62,6 +70,12 @@ public sealed class StockService : IStockService
 
         stock.Decrease(quantity);
         await _repository.UpdateAsync(stock, cancellationToken);
+
+        // Negative quantity for out movements? The User requirement says: "Quantity (Decimal/Int) -> Positivo para entradas, negativo para salidas."
+        // So Sale should be negative.
+        var movement = new StockMovement(productId, StockMovementType.Sale, -quantity, referenceId);
+        await _repository.AddMovementAsync(movement, cancellationToken);
+        
         return Map(stock);
     }
 
@@ -73,8 +87,17 @@ public sealed class StockService : IStockService
             return null;
         }
 
+        var previousQuantity = stock.Quantity;
         stock.SetQuantity(quantity);
         await _repository.UpdateAsync(stock, cancellationToken);
+
+        var diff = quantity - previousQuantity;
+        if (diff != 0)
+        {
+            var movement = new StockMovement(productId, StockMovementType.Adjustment, diff, null);
+            await _repository.AddMovementAsync(movement, cancellationToken);
+        }
+
         return Map(stock);
     }
 

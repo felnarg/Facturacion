@@ -4,6 +4,7 @@ using Inventario.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventario.API.Migrations
 {
     [DbContext(typeof(InventarioDbContext))]
-    partial class InventarioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127151331_AddStockMovements")]
+    partial class AddStockMovements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,24 +49,6 @@ namespace Inventario.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Stocks", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("d34e9a8b-1111-4444-8888-c75b5b9e0f01"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProductId = new Guid("2b6d7b3f-7c3c-4f6d-a9f5-7c5b5b9e0f01"),
-                            Quantity = 100,
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("e56f8b9c-2222-4444-8888-1f8b6f3e4e02"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProductId = new Guid("9a2e8f9a-6d6d-4b6a-9c5f-1f8b6f3e4e02"),
-                            Quantity = 50,
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        });
                 });
 
             modelBuilder.Entity("Inventario.Domain.Entities.StockMovement", b =>
@@ -95,24 +80,6 @@ namespace Inventario.API.Migrations
                     b.HasIndex("ReferenceId");
 
                     b.ToTable("StockMovements", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("f67a8b9c-3333-4444-8888-c75b5b9e0f01"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProductId = new Guid("2b6d7b3f-7c3c-4f6d-a9f5-7c5b5b9e0f01"),
-                            Quantity = 100,
-                            Type = "Creation"
-                        },
-                        new
-                        {
-                            Id = new Guid("a89b7c6d-4444-4444-8888-1f8b6f3e4e02"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProductId = new Guid("9a2e8f9a-6d6d-4b6a-9c5f-1f8b6f3e4e02"),
-                            Quantity = 50,
-                            Type = "Creation"
-                        });
                 });
 #pragma warning restore 612, 618
         }

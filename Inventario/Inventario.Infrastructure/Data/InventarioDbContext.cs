@@ -11,6 +11,7 @@ public sealed class InventarioDbContext : DbContext
     }
 
     public DbSet<Stock> Stocks => Set<Stock>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

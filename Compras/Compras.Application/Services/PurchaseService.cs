@@ -78,7 +78,7 @@ public sealed class PurchaseService : IPurchaseService
         purchase.MarkReceived();
         await _repository.UpdateAsync(purchase, cancellationToken);
 
-        var stockReceived = new StockReceived(purchase.ProductId, purchase.Quantity);
+        var stockReceived = new StockReceived(purchase.Id, purchase.ProductId, purchase.Quantity);
         await _eventBus.PublishAsync(stockReceived, "stock.received", cancellationToken);
 
         return Map(purchase);

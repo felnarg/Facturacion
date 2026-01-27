@@ -118,7 +118,7 @@ export default function VentasPage() {
   }, [quantity, selectedProduct, saleType]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === "Tab") {
+    if (e.key === "Enter") {
       e.preventDefault();
       setProductSearch(productName);
       setIsProductModalOpen(true);
@@ -183,7 +183,7 @@ export default function VentasPage() {
   };
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === "Tab") {
       e.preventDefault();
       addItem();
     }
@@ -291,7 +291,7 @@ export default function VentasPage() {
                 {
                   id: "product",
                   label: "Producto",
-                  initialWidth: 220,
+                  initialWidth: 650,
                   content: (
                     <input
                       ref={productInputRef}

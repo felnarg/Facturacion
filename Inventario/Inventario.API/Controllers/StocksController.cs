@@ -44,7 +44,7 @@ public sealed class StocksController : ControllerBase
     [HttpPut("{productId:guid}/increase")]
     public async Task<ActionResult<StockDto>> Increase(Guid productId, AdjustStockRequest request, CancellationToken cancellationToken)
     {
-        var stock = await _stockService.IncreaseAsync(productId, request.Quantity, cancellationToken);
+        var stock = await _stockService.IncreaseAsync(productId, request.Quantity, null, cancellationToken);
         if (stock is null)
         {
             return NotFound();
@@ -56,7 +56,7 @@ public sealed class StocksController : ControllerBase
     [HttpPut("{productId:guid}/decrease")]
     public async Task<ActionResult<StockDto>> Decrease(Guid productId, AdjustStockRequest request, CancellationToken cancellationToken)
     {
-        var stock = await _stockService.DecreaseAsync(productId, request.Quantity, cancellationToken);
+        var stock = await _stockService.DecreaseAsync(productId, request.Quantity, null, cancellationToken);
         if (stock is null)
         {
             return NotFound();

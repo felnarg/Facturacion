@@ -26,5 +26,7 @@ public sealed class StockConfiguration : IEntityTypeConfiguration<Stock>
 
         builder.Property(stock => stock.UpdatedAt)
             .IsRequired();
+
+        builder.HasData(Inventario.Infrastructure.Data.Seed.SeedStocks.GetStocks());
     }
 }

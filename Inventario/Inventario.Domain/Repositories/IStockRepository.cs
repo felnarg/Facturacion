@@ -8,4 +8,5 @@ public interface IStockRepository
     Task<IReadOnlyList<Stock>> GetAllAsync(CancellationToken cancellationToken = default);
     Task AddAsync(Stock stock, CancellationToken cancellationToken = default);
     Task UpdateAsync(Stock stock, CancellationToken cancellationToken = default);
+    Task AddMovementAsync(StockMovement movement, CancellationToken cancellationToken = default);
 }
