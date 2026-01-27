@@ -5,7 +5,6 @@ public sealed record ProductDto(
     string Name,
     string Description,
     decimal Price,
-    int Stock,
     int SupplierProductCode,
     int InternalProductCode,
     decimal SalePercentage,

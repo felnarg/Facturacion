@@ -11,7 +11,6 @@ type Product = {
   name: string;
   description: string;
   price: number;
-  stock: number;
   supplierProductCode: number;
   internalProductCode: number;
   salePercentage: number;
@@ -27,7 +26,6 @@ const emptyForm = {
   name: "",
   description: "",
   price: "0",
-  stock: "0",
   supplierProductCode: "",
   internalProductCode: "",
   salePercentage: "30",
@@ -111,7 +109,6 @@ export default function CatalogoPage() {
       name: form.name,
       description: form.description,
       price: safeNumber(form.price),
-      stock: parseInt(String(form.stock || 0), 10), // Ensure integer
       supplierProductCode: parseInt(String(form.supplierProductCode || 0), 10), // Ensure integer
       internalProductCode: parseInt(String(form.internalProductCode || 0), 10), // Ensure integer
       salePercentage: safeNumber(form.salePercentage),
@@ -157,7 +154,6 @@ export default function CatalogoPage() {
       name: product.name,
       description: product.description,
       price: String(product.price),
-      stock: String(product.stock),
       supplierProductCode: String(product.supplierProductCode),
       internalProductCode: String(product.internalProductCode),
       salePercentage: String(product.salePercentage),
@@ -253,19 +249,7 @@ export default function CatalogoPage() {
             />
           </div>
 
-          {/* 4. Stock */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Stock</label>
-            <input
-              className="rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-              type="number"
-              value={form.stock}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, stock: event.target.value }))
-              }
-              required
-            />
-          </div>
+
 
           {/* 5. Precio */}
           <div className="flex flex-col gap-1">
@@ -451,7 +435,7 @@ export default function CatalogoPage() {
                         wholesaleSalePercentage: String(product.wholesaleSalePercentage),
                         specialSalePercentage: String(product.specialSalePercentage),
                         iva: String(product.iva),
-                        stock: String(product.stock),
+                        iva: String(product.iva),
                         supplierProductCode: String(product.supplierProductCode),
                         internalProductCode: String(product.internalProductCode),
                       });

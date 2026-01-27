@@ -89,12 +89,8 @@ public sealed class InventoryEventsConsumer : BackgroundService
             }
             case "product.updated":
             {
-                var message = JsonSerializer.Deserialize<ProductUpdated>(body);
-                if (message is not null)
-                {
-                    await stockService.SetAsync(message.ProductId, message.Stock, cancellationToken);
-                }
-
+                // Product updates no longer carry stock information (Stock is now mastered in Inventory).
+                // We do nothing here regarding stock.
                 break;
             }
             case "stock.received":

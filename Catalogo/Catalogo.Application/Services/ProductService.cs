@@ -43,7 +43,6 @@ public sealed class ProductService : IProductService
             request.Name,
             request.Description,
             request.Price,
-            request.Stock,
             request.SupplierProductCode,
             request.InternalProductCode,
             request.SalePercentage,
@@ -56,8 +55,7 @@ public sealed class ProductService : IProductService
         var createdEvent = new ProductCreated(
             product.Id,
             product.Name,
-            product.Price,
-            product.Stock);
+            product.Price);
 
         await _eventBus.PublishAsync(createdEvent, "product.created", cancellationToken);
 
@@ -76,7 +74,6 @@ public sealed class ProductService : IProductService
             request.Name,
             request.Description,
             request.Price,
-            request.Stock,
             request.SupplierProductCode,
             request.InternalProductCode,
             request.SalePercentage,
@@ -89,8 +86,7 @@ public sealed class ProductService : IProductService
         var updatedEvent = new ProductUpdated(
             product.Id,
             product.Name,
-            product.Price,
-            product.Stock);
+            product.Price);
 
         await _eventBus.PublishAsync(updatedEvent, "product.updated", cancellationToken);
 
@@ -120,7 +116,6 @@ public sealed class ProductService : IProductService
             product.Name,
             product.Description,
             product.Price,
-            product.Stock,
             product.SupplierProductCode,
             product.InternalProductCode,
             product.SalePercentage,

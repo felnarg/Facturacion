@@ -35,7 +35,7 @@ type Product = {
   name: string;
   description: string;
   price: number;
-  stock: number;
+  stock?: number;
   supplierProductCode: number;
   internalProductCode: number;
   salePercentage: number;
@@ -316,38 +316,49 @@ export default function ComprasPage() {
     setUpdating(field);
 
     try {
-      const payload = {
-        name: selectedProduct.name,
-        description: selectedProduct.description,
-        price: selectedProduct.price,
-        stock: Number(form.stock),
-        supplierProductCode: selectedProduct.supplierProductCode,
-        internalProductCode: selectedProduct.internalProductCode,
-        salePercentage: Number(form.salePercent),
-        consumptionTaxPercentage: Number(form.consumptionTax),
-        wholesaleSalePercentage: Number(form.wholesaleSale),
-        specialSalePercentage: Number(form.specialSale),
-        iva: Number(form.iva),
-      };
+      if (field === 'stock') {
+        const payload = { quantity: Number(form.stock) };
+        await apiRequest<any>(
+          `/api/stocks/${selectedProduct.id}/set`,
+          {
+            method: "PUT",
+            body: JSON.stringify(payload)
+          },
+          user.token
+        );
+      } else {
+        const payload = {
+          name: selectedProduct.name,
+          description: selectedProduct.description,
+          price: selectedProduct.price,
+          supplierProductCode: selectedProduct.supplierProductCode,
+          internalProductCode: selectedProduct.internalProductCode,
+          salePercentage: Number(form.salePercent),
+          consumptionTaxPercentage: Number(form.consumptionTax),
+          wholesaleSalePercentage: Number(form.wholesaleSale),
+          specialSalePercentage: Number(form.specialSale),
+          iva: Number(form.iva),
+        };
 
-      await apiRequest(
-        `/api/catalog/products/${selectedProduct.id}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        },
-        user.token
-      );
+        await apiRequest(
+          `/api/catalog/products/${selectedProduct.id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          },
+          user.token
+        );
+      }
 
       // Update our local selectedProduct state just in case
       setSelectedProduct({
         ...selectedProduct,
-        stock: payload.stock,
-        salePercentage: payload.salePercentage,
-        consumptionTaxPercentage: payload.consumptionTaxPercentage,
-        wholesaleSalePercentage: payload.wholesaleSalePercentage,
-        specialSalePercentage: payload.specialSalePercentage,
-        iva: payload.iva
+        // stock: payload.stock, // Stock is now managed by inventory
+        salePercentage: Number(form.salePercent),
+        consumptionTaxPercentage: Number(form.consumptionTax),
+        wholesaleSalePercentage: Number(form.wholesaleSale),
+        specialSalePercentage: Number(form.specialSale),
+        iva: Number(form.iva)
       });
 
       // Hide the updating indicator after 1 second
@@ -367,7 +378,21 @@ export default function ComprasPage() {
     }
   };
 
-  const fillProductForm = (product: Product) => {
+  const fillProductForm = async (product: Product) => {
+    // Fetch current stock from Inventory
+    let currentStock = 0;
+    try {
+      const stockData = await apiRequest<{ quantity: number }>(
+        `/api/stocks/${product.id}`,
+        undefined,
+        user.token
+      );
+      currentStock = stockData.quantity;
+    } catch (e) {
+      // If 404 or verify failed, assume 0 or create? 
+      // For now assume 0 if not found.
+    }
+
     setSelectedProduct(product);
     setForm((prev) => ({
       ...prev,
@@ -380,7 +405,7 @@ export default function ComprasPage() {
       consumptionTax: String(product.consumptionTaxPercentage ?? ""),
       wholesaleSale: String(product.wholesaleSalePercentage ?? ""),
       specialSale: String(product.specialSalePercentage ?? ""),
-      stock: String(product.stock ?? "0"),
+      stock: String(currentStock),
       iva: String(product.iva ?? "19"),
       productCreatedAt: product.createdAt ? new Date(product.createdAt).toISOString().split('T')[0] : "",
     }));
@@ -481,7 +506,7 @@ export default function ComprasPage() {
                           (product) => String(product.internalProductCode) === term
                         );
                         if (exact) {
-                          fillProductForm(exact);
+                          await fillProductForm(exact);
                         } else {
                           setProductSearch(term);
                           setProductModalOpen(true);
@@ -932,7 +957,7 @@ export default function ComprasPage() {
                   <button
                     key={product.id}
                     onClick={() => {
-                      fillProductForm(product);
+                      fillProductForm(product).catch(() => { });
                       setProductModalOpen(false);
                       setTimeout(() => productNameInputRef.current?.focus(), 0);
                     }}

@@ -6,7 +6,6 @@ public class Product
     public string Name { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
     public decimal Price { get; private set; }
-    public int Stock { get; private set; }
     public int SupplierProductCode { get; private set; }
     public int InternalProductCode { get; private set; }
     public decimal SalePercentage { get; private set; }
@@ -25,7 +24,6 @@ public class Product
         string name,
         string description,
         decimal price,
-        int stock,
         int supplierProductCode,
         int internalProductCode,
         decimal salePercentage,
@@ -39,7 +37,6 @@ public class Product
             name,
             description,
             price,
-            stock,
             supplierProductCode,
             internalProductCode,
             salePercentage,
@@ -55,7 +52,6 @@ public class Product
         string name,
         string description,
         decimal price,
-        int stock,
         int supplierProductCode,
         int internalProductCode,
         decimal salePercentage,
@@ -68,7 +64,6 @@ public class Product
             name,
             description,
             price,
-            stock,
             supplierProductCode,
             internalProductCode,
             salePercentage,
@@ -90,7 +85,6 @@ public class Product
         string name,
         string description,
         decimal price,
-        int stock,
         int supplierProductCode,
         int internalProductCode,
         decimal salePercentage,
@@ -107,11 +101,6 @@ public class Product
         if (price < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(price), "El precio no puede ser negativo.");
-        }
-
-        if (stock < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(stock), "El stock no puede ser negativo.");
         }
 
         if (supplierProductCode <= 0)
@@ -133,7 +122,6 @@ public class Product
         Name = name.Trim();
         Description = description?.Trim() ?? string.Empty;
         Price = price;
-        Stock = stock;
         SupplierProductCode = supplierProductCode;
         InternalProductCode = internalProductCode;
         SalePercentage = salePercentage;

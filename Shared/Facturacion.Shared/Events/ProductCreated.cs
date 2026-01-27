@@ -3,6 +3,5 @@ namespace Facturacion.Shared.Events;
 public record ProductCreated(
     Guid ProductId,
     string Name,
-    decimal Price,
-    int Stock)
+    decimal Price)
     : IntegrationEvent(Guid.NewGuid(), DateTime.UtcNow);

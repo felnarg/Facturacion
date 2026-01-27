@@ -5,7 +5,6 @@ public sealed class UpdateProductRequest
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public int Stock { get; set; }
     public int SupplierProductCode { get; set; }
     public int InternalProductCode { get; set; }
     public decimal SalePercentage { get; set; } = 30m;

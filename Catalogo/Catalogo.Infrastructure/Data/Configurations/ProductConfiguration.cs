@@ -54,9 +54,6 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
-        builder.Property(product => product.Stock)
-            .IsRequired();
-
         builder.Property(product => product.CreatedAt)
             .IsRequired();
 
@@ -71,7 +68,6 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Name = "Producto base",
                 Description = "Producto de ejemplo para el catalogo",
                 Price = 19.99m,
-                Stock = 100,
                 SupplierProductCode = 11001,
                 InternalProductCode = 50001,
                 SalePercentage = 30m,
@@ -88,7 +84,6 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 Name = "Producto premium",
                 Description = "Producto premium de ejemplo",
                 Price = 79.99m,
-                Stock = 50,
                 SupplierProductCode = 11002,
                 InternalProductCode = 50002,
                 SalePercentage = 25m,
