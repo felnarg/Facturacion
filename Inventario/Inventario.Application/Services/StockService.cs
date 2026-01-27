@@ -34,11 +34,11 @@ public sealed class StockService : IStockService
             return Map(existing);
         }
 
+        // Create stock and movement - SaveChangesAsync ensures atomicity
         var stock = new Stock(productId);
-        await _repository.AddAsync(stock, cancellationToken);
-        
         var movement = new StockMovement(productId, StockMovementType.Creation, 0, null);
-        await _repository.AddMovementAsync(movement, cancellationToken);
+        
+        await _repository.AddStockWithMovementAsync(stock, movement, cancellationToken);
         
         return Map(stock);
     }
@@ -51,12 +51,11 @@ public sealed class StockService : IStockService
             return null;
         }
 
+        // Update stock and add movement - SaveChangesAsync ensures atomicity
         stock.Increase(quantity);
-        await _repository.UpdateAsync(stock, cancellationToken);
-
         var movement = new StockMovement(productId, StockMovementType.Purchase, quantity, referenceId);
-        await _repository.AddMovementAsync(movement, cancellationToken);
 
+        await _repository.UpdateStockWithMovementAsync(stock, movement, cancellationToken);
         return Map(stock);
     }
 
@@ -68,14 +67,11 @@ public sealed class StockService : IStockService
             return null;
         }
 
+        // Update stock and add movement - SaveChangesAsync ensures atomicity
         stock.Decrease(quantity);
-        await _repository.UpdateAsync(stock, cancellationToken);
-
-        // Negative quantity for out movements? The User requirement says: "Quantity (Decimal/Int) -> Positivo para entradas, negativo para salidas."
-        // So Sale should be negative.
         var movement = new StockMovement(productId, StockMovementType.Sale, -quantity, referenceId);
-        await _repository.AddMovementAsync(movement, cancellationToken);
         
+        await _repository.UpdateStockWithMovementAsync(stock, movement, cancellationToken);
         return Map(stock);
     }
 
@@ -88,16 +84,18 @@ public sealed class StockService : IStockService
         }
 
         var previousQuantity = stock.Quantity;
-        stock.SetQuantity(quantity);
-        await _repository.UpdateAsync(stock, cancellationToken);
-
         var diff = quantity - previousQuantity;
-        if (diff != 0)
+        
+        if (diff == 0)
         {
-            var movement = new StockMovement(productId, StockMovementType.Adjustment, diff, null);
-            await _repository.AddMovementAsync(movement, cancellationToken);
+            return Map(stock);
         }
 
+        // Update stock and add movement - SaveChangesAsync ensures atomicity
+        stock.SetQuantity(quantity);
+        var movement = new StockMovement(productId, StockMovementType.Adjustment, diff, null);
+
+        await _repository.UpdateStockWithMovementAsync(stock, movement, cancellationToken);
         return Map(stock);
     }
 

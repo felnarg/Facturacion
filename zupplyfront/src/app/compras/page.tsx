@@ -319,7 +319,7 @@ export default function ComprasPage() {
       if (field === 'stock') {
         const payload = { quantity: Number(form.stock) };
         await apiRequest<any>(
-          `/api/stocks/${selectedProduct.id}/set`,
+          `/api/inventory/stocks/${selectedProduct.id}/set`,
           {
             method: "PUT",
             body: JSON.stringify(payload)
@@ -382,8 +382,8 @@ export default function ComprasPage() {
     // Fetch current stock from Inventory
     let currentStock = 0;
     try {
-      const stockData = await apiRequest<{ quantity: number }>(
-        `/api/stocks/${product.id}`,
+      const stockData = await apiRequest<{ productId: string; quantity: number; createdAt: string; updatedAt: string }>(
+        `/api/inventory/stocks/${product.id}`,
         undefined,
         user.token
       );

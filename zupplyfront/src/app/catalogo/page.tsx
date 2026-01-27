@@ -435,7 +435,6 @@ export default function CatalogoPage() {
                         wholesaleSalePercentage: String(product.wholesaleSalePercentage),
                         specialSalePercentage: String(product.specialSalePercentage),
                         iva: String(product.iva),
-                        iva: String(product.iva),
                         supplierProductCode: String(product.supplierProductCode),
                         internalProductCode: String(product.internalProductCode),
                       });
