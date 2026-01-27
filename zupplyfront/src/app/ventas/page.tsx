@@ -44,11 +44,14 @@ export default function VentasPage() {
   const [unitValue, setUnitValue] = useState(0);
   const [total, setTotal] = useState(0);
   const [saleType, setSaleType] = useState<'detal' | 'mayor' | 'especial'>('detal');
+  const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'credito' | 'datafono'>('efectivo');
+  const [amountTendered, setAmountTendered] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Search State
   const [products, setProducts] = useState<Product[]>([]);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
 
   const [error, setError] = useState("");
@@ -57,6 +60,7 @@ export default function VentasPage() {
   const quantityInputRef = useRef<HTMLInputElement>(null);
   const productInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const paymentInputRef = useRef<HTMLInputElement>(null);
 
 
 
@@ -67,6 +71,13 @@ export default function VentasPage() {
       loadProducts(productSearch).catch(() => { });
     }
   }, [isProductModalOpen, productSearch]);
+
+  // Payment Modal Focus Effect
+  useEffect(() => {
+    if (isPaymentModalOpen) {
+      setTimeout(() => paymentInputRef.current?.focus(), 0);
+    }
+  }, [isPaymentModalOpen]);
 
   // Price Calculation Logic
   useEffect(() => {
@@ -125,6 +136,13 @@ export default function VentasPage() {
 
   const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
 
+  // Rounding Helper (Updated to Ceiling)
+  const roundToNearest50 = (value: number) => {
+    return Math.ceil(value / 50) * 50;
+  };
+
+  const roundedTotal = roundToNearest50(grandTotal);
+
   const loadProducts = async (search?: string) => {
     const query = search ? `?search=${encodeURIComponent(search)}` : "";
     const data = await apiRequest<Product[]>(
@@ -154,6 +172,7 @@ export default function VentasPage() {
     // Reset form
     setProductName("");
     setQuantity("");
+    setAmountTendered(""); // Reset tendered amount? Optional, maybe keep it. Resetting for now.
     setSelectedProduct(null);
     setUnitValue(0);
     setTotal(0);
@@ -170,7 +189,17 @@ export default function VentasPage() {
     }
   };
 
-  const handleCreateSale = async () => {
+  const handleCreateSale = () => {
+    if (items.length === 0) return;
+    setError("");
+    setIsPaymentModalOpen(true);
+  };
+
+  const confirmSale = async () => {
+    if (Number(amountTendered) < roundedTotal) {
+      // Prevent completing if payment is insufficient
+      return;
+    }
     setError("");
     try {
       await apiRequest<Sale>(
@@ -184,8 +213,14 @@ export default function VentasPage() {
         user.token
       );
       setItems([]);
+      setIsPaymentModalOpen(false);
+      setAmountTendered("");
+
+      // Optional: Show success message or toast
+      // await loadSales(); // Removed per previous step but usually re-fetching is good practice or just rely on local state if avoiding history table
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creando venta");
+      setIsPaymentModalOpen(false);
     }
   };
 
@@ -206,21 +241,37 @@ export default function VentasPage() {
           </h3>
 
           <div className="mt-4 flex flex-col gap-4">
-            {/* Row 1: Type of Sale (Global) & Total */}
+            {/* Row 1: Type of Sale & Payment Method (Global) & Total */}
             <div className="flex w-full items-end justify-between gap-4">
-              <div className="w-full md:w-1/4">
-                <label className="mb-1 block text-xs font-medium text-zinc-500">
-                  Tipo Venta
-                </label>
-                <select
-                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-                  value={saleType}
-                  onChange={(e) => setSaleType(e.target.value as 'detal' | 'mayor' | 'especial')}
-                >
-                  <option value="detal">Detal</option>
-                  <option value="mayor">Mayor</option>
-                  <option value="especial">Especial</option>
-                </select>
+              <div className="flex w-full md:w-1/2 gap-4">
+                <div className="w-1/2">
+                  <label className="mb-1 block text-xs font-medium text-zinc-500">
+                    Tipo Venta
+                  </label>
+                  <select
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    value={saleType}
+                    onChange={(e) => setSaleType(e.target.value as 'detal' | 'mayor' | 'especial')}
+                  >
+                    <option value="detal">Detal</option>
+                    <option value="mayor">Mayor</option>
+                    <option value="especial">Especial</option>
+                  </select>
+                </div>
+                <div className="w-1/2">
+                  <label className="mb-1 block text-xs font-medium text-zinc-500">
+                    Método Pago
+                  </label>
+                  <select
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as 'efectivo' | 'credito' | 'datafono')}
+                  >
+                    <option value="efectivo">Efectivo</option>
+                    <option value="credito">Crédito</option>
+                    <option value="datafono">Datáfono</option>
+                  </select>
+                </div>
               </div>
 
               {/* Grand Total Display */}
@@ -231,6 +282,7 @@ export default function VentasPage() {
                 </span>
               </div>
             </div>
+
 
             {/* Row 2: Item Inputs */}
             {/* Row 2: Item Inputs */}
@@ -306,7 +358,7 @@ export default function VentasPage() {
                   <th className="px-3 py-2">Producto</th>
                   <th className="px-3 py-2">Cant</th>
                   <th className="px-3 py-2">Unitario</th>
-                  <th className="px-3 py-2">Total</th>
+                  <th className="px-3 py-2">Subtotal</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -383,6 +435,70 @@ export default function VentasPage() {
                     ))}
                   </ul>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Confirmation Modal */}
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl ring-1 ring-zinc-900/5">
+              <h3 className="mb-4 text-lg font-bold text-zinc-900">
+                Confirmar Venta
+              </h3>
+
+              <div className="space-y-4">
+                <div className="flex justify-between border-b border-zinc-100 pb-2">
+                  <span className="text-zinc-500">Total a Pagar (Redondeado)</span>
+                  <span className="text-xl font-bold text-zinc-900">
+                    ${roundedTotal.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-zinc-700">
+                    Paga con:
+                  </label>
+                  <input
+                    ref={paymentInputRef}
+                    className="w-full rounded-md border border-zinc-300 px-3 py-2 text-lg font-medium text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                    type="number"
+                    placeholder="Ingrese valor"
+                    value={amountTendered}
+                    onChange={(e) => setAmountTendered(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (Number(amountTendered) >= roundedTotal) {
+                          confirmSale();
+                        }
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-between border-t border-zinc-100 pt-3">
+                  <span className="text-zinc-500">Cambio / Devuelta</span>
+                  <span className={`text-xl font-bold ${(Number(amountTendered) - roundedTotal) < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    ${(Number(amountTendered) - roundedTotal).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setIsPaymentModalOpen(false)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500/20"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmSale}
+                  disabled={Number(amountTendered) < roundedTotal}
+                  className={`w-full rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-zinc-900/20 ${Number(amountTendered) < roundedTotal ? 'bg-zinc-400 cursor-not-allowed' : 'bg-zinc-900 hover:bg-zinc-800'}`}
+                >
+                  Aceptar
+                </button>
               </div>
             </div>
           </div>
