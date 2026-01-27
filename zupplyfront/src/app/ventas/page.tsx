@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
+import { ResizableInputGroup } from "@/components/ResizableInputGroup";
 
 type Product = {
   id: string;
@@ -235,59 +236,69 @@ export default function VentasPage() {
             </div>
 
             {/* Row 2: Item Inputs */}
-            <div className="grid gap-3 md:grid-cols-4 items-end">
-              <div className="md:col-span-1">
-                <label className="mb-1 block text-xs font-medium text-zinc-500">
-                  Producto
-                </label>
-                <input
-                  ref={productInputRef}
-                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-                  placeholder="Buscar (Enter)"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-500">
-                  Cantidad
-                </label>
-                <input
-                  ref={quantityInputRef}
-                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-                  placeholder="0"
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  onKeyDown={handleQuantityKeyDown}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-500">
-                  Valor Unitario
-                </label>
-                <input
-                  className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
-                  value={unitValue ? unitValue.toFixed(2) : ""}
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-500">
-                  Total
-                </label>
-                <input
-                  className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
-                  value={total ? total.toFixed(2) : ""}
-                  readOnly
-                />
-              </div>
-            </div>
+            {/* Row 2: Item Inputs */}
+            <ResizableInputGroup
+              columns={[
+                {
+                  id: "product",
+                  label: "Producto",
+                  initialWidth: 220,
+                  content: (
+                    <input
+                      ref={productInputRef}
+                      className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                      placeholder="Buscar (Enter)"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
+                    />
+                  ),
+                },
+                {
+                  id: "qty",
+                  label: "Cantidad",
+                  initialWidth: 100,
+                  content: (
+                    <input
+                      ref={quantityInputRef}
+                      className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                      placeholder="0"
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                      onKeyDown={handleQuantityKeyDown}
+                    />
+                  ),
+                },
+                {
+                  id: "unit",
+                  label: "Valor Unitario",
+                  initialWidth: 140,
+                  content: (
+                    <input
+                      className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                      value={unitValue ? unitValue.toFixed(2) : ""}
+                      readOnly
+                      tabIndex={-1}
+                    />
+                  ),
+                },
+                {
+                  id: "total",
+                  label: "Total",
+                  initialWidth: 140,
+                  content: (
+                    <input
+                      className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                      value={total ? total.toFixed(2) : ""}
+                      readOnly
+                      tabIndex={-1}
+                    />
+                  ),
+                },
+              ]}
+            />
           </div>
 
           {/* Items List */}
@@ -304,10 +315,10 @@ export default function VentasPage() {
               <tbody className="divide-y divide-zinc-100">
                 {items.map((item, index) => (
                   <tr key={`${item.productId}-${index}`}>
-                    <td className="px-3 py-2">{item.productName || item.productId}</td>
-                    <td className="px-3 py-2">{item.quantity}</td>
-                    <td className="px-3 py-2">{item.unitValue?.toFixed(2)}</td>
-                    <td className="px-3 py-2">{item.total?.toFixed(2)}</td>
+                    <td className="px-3 py-2 font-medium text-zinc-900">{item.productName || item.productId}</td>
+                    <td className="px-3 py-2 font-medium text-zinc-900">{item.quantity}</td>
+                    <td className="px-3 py-2 font-medium text-zinc-900">{item.unitValue?.toFixed(2)}</td>
+                    <td className="px-3 py-2 font-medium text-zinc-900">{item.total?.toFixed(2)}</td>
                   </tr>
                 ))}
                 {items.length === 0 && (
