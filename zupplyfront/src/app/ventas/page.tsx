@@ -16,6 +16,7 @@ type Product = {
   specialSalePercentage: number;
   iva: number;
   internalProductCode: number;
+  consumptionTaxPercentage?: number;
 };
 
 type SaleItem = {
@@ -42,6 +43,7 @@ export default function VentasPage() {
   const [quantity, setQuantity] = useState("");
   const [unitValue, setUnitValue] = useState(0);
   const [total, setTotal] = useState(0);
+  const [saleType, setSaleType] = useState<'detal' | 'mayor' | 'especial'>('detal');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Search State
@@ -104,28 +106,28 @@ export default function VentasPage() {
       return;
     }
 
-    // Determine margin based on quantity
+    // Determine margin based on saleType selector
     let margin = selectedProduct.salePercentage || 0;
-    if (qty >= 12 && selectedProduct.specialSalePercentage > 0) {
+    if (saleType === 'especial' && selectedProduct.specialSalePercentage > 0) {
       margin = selectedProduct.specialSalePercentage;
-    } else if (qty >= 6 && selectedProduct.wholesaleSalePercentage > 0) {
+    } else if (saleType === 'mayor' && selectedProduct.wholesaleSalePercentage > 0) {
       margin = selectedProduct.wholesaleSalePercentage;
     }
 
-    // Calculate Price: Cost * (1 + Margin) * (1 + IVA)
+    // Calculate Price: Cost * (1 + ConsumptionTax) * (1 + IVA) * (1 + Margin)
     const basePrice = selectedProduct.price;
-    const priceWithMargin = basePrice * (1 + margin / 100);
-    const iva = selectedProduct.iva || 0; // Default to 0 if null, or 19? Compras defaulted to 19. Let's use 0 if not set, or checks.
-    // In Compras: iva: String(product.iva ?? "19")
-    // Let's assume 19 if undefined for safety, or better: use product value.
-    const effectiveIva = (selectedProduct.iva ?? 19) / 100;
 
-    const finalUnitValue = priceWithMargin * (1 + effectiveIva);
+    const consumptionTax = (selectedProduct.consumptionTaxPercentage ?? 0) / 100;
+    const iva = (selectedProduct.iva ?? 19) / 100;
+    const saleMargin = margin / 100;
 
-    setUnitValue(finalUnitValue);
-    setTotal(finalUnitValue * qty);
+    const priceWithTaxesAndMargin = basePrice * (1 + consumptionTax) * (1 + iva) * (1 + saleMargin);
 
-  }, [quantity, selectedProduct]);
+    setUnitValue(priceWithTaxesAndMargin);
+    setTotal(priceWithTaxesAndMargin * qty);
+
+
+  }, [quantity, selectedProduct, saleType]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === "Tab") {
@@ -140,6 +142,7 @@ export default function VentasPage() {
     setProductName(product.name);
     setQuantity("1"); // Default to 1
     setIsProductModalOpen(false);
+    setSaleType('detal'); // Reset to default
     setTimeout(() => quantityInputRef.current?.focus(), 0);
   };
 
@@ -165,6 +168,7 @@ export default function VentasPage() {
     setSelectedProduct(null);
     setUnitValue(0);
     setTotal(0);
+    setSaleType('detal');
 
     // Focus back to product input
     setTimeout(() => productInputRef.current?.focus(), 0);
@@ -213,57 +217,76 @@ export default function VentasPage() {
             Crear nueva venta
           </h3>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-4 items-end">
-            <div className="md:col-span-1">
+          <div className="mt-4 flex flex-col gap-4">
+            {/* Row 1: Type of Sale (Global) */}
+            <div className="w-full md:w-1/4">
               <label className="mb-1 block text-xs font-medium text-zinc-500">
-                Producto
+                Tipo Venta
               </label>
-              <input
-                ref={productInputRef}
+              <select
                 className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-                placeholder="Buscar (Enter)"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
+                value={saleType}
+                onChange={(e) => setSaleType(e.target.value as 'detal' | 'mayor' | 'especial')}
+              >
+                <option value="detal">Detal</option>
+                <option value="mayor">Mayor</option>
+                <option value="especial">Especial</option>
+              </select>
             </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-zinc-500">
-                Cantidad
-              </label>
-              <input
-                ref={quantityInputRef}
-                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
-                placeholder="0"
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                onKeyDown={handleQuantityKeyDown}
-              />
-            </div>
+            {/* Row 2: Item Inputs */}
+            <div className="grid gap-3 md:grid-cols-4 items-end">
+              <div className="md:col-span-1">
+                <label className="mb-1 block text-xs font-medium text-zinc-500">
+                  Producto
+                </label>
+                <input
+                  ref={productInputRef}
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                  placeholder="Buscar (Enter)"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                />
+              </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-zinc-500">
-                Valor Unitario
-              </label>
-              <input
-                className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
-                value={unitValue ? unitValue.toFixed(2) : ""}
-                readOnly
-              />
-            </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-500">
+                  Cantidad
+                </label>
+                <input
+                  ref={quantityInputRef}
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                  placeholder="0"
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  onKeyDown={handleQuantityKeyDown}
+                />
+              </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-zinc-500">
-                Total
-              </label>
-              <input
-                className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
-                value={total ? total.toFixed(2) : ""}
-                readOnly
-              />
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-500">
+                  Valor Unitario
+                </label>
+                <input
+                  className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                  value={unitValue ? unitValue.toFixed(2) : ""}
+                  readOnly
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-500">
+                  Total
+                </label>
+                <input
+                  className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                  value={total ? total.toFixed(2) : ""}
+                  readOnly
+                />
+              </div>
             </div>
           </div>
 
@@ -330,10 +353,10 @@ export default function VentasPage() {
                       {item.quantity}
                     </td>
                     <td className="px-4 py-3">
-                      {index === 0 ? sale.id.slice(0, 8) + "..." : ""}
+                      {sale.id.slice(0, 8)}...
                     </td>
                     <td className="px-4 py-3">
-                      {index === 0 ? new Date(sale.createdAt).toLocaleDateString() + " " + new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                      {new Date(sale.createdAt).toLocaleDateString()} {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
                   </tr>
                 ))
