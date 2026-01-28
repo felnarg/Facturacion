@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Usuarios.API.Auth;
 using Usuarios.Application;
 using Usuarios.Infrastructure;
 using Usuarios.Infrastructure.Auth;
+using Usuarios.Infrastructure.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddRbacSeeder();
 
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>();
 if (jwtOptions is null || string.IsNullOrWhiteSpace(jwtOptions.Key))
@@ -32,10 +36,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtOptions.Issuer,
             ValidAudience = jwtOptions.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
+// Configurar autorización basada en permisos
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -53,10 +61,16 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Aplicar migraciones y seed de datos
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<Usuarios.Infrastructure.Data.UsuariosDbContext>();
     dbContext.Database.Migrate();
+    
+    // Ejecutar seeding de roles y permisos
+    var seeder = scope.ServiceProvider.GetRequiredService<RbacSeeder>();
+    await seeder.SeedAsync();
 }
 
 app.Run();
+
