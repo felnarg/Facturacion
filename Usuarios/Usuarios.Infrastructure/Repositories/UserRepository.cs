@@ -109,7 +109,45 @@ public sealed class UserRepository : IUserRepository
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
-        _dbContext.Users.Update(user);
+        // No llamamos a Update explícitamente porque confiamos en el Change Tracker de EF Core
+        // al trabajar con entidades cargadas en el mismo contexto.
+        // Llamar a Update forzaría el estado Modified en todo el grafo, lo cual puede causar
+        // problemas de concurrencia o actualizaciones innecesarias.
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SyncUserRolesAsync(Guid userId, IEnumerable<Guid> roleIds, CancellationToken cancellationToken = default)
+    {
+        var roleIdSet = roleIds.ToHashSet();
+
+        // Obtener roles actuales del usuario directamente de la tabla UserRoles
+        var currentUserRoles = await _dbContext.UserRoles
+            .Where(ur => ur.UserId == userId)
+            .ToListAsync(cancellationToken);
+
+        // Identificar roles a eliminar
+        var rolesToRemove = currentUserRoles
+            .Where(ur => !roleIdSet.Contains(ur.RoleId))
+            .ToList();
+
+        // Identificar roles a agregar
+        var existingRoleIds = currentUserRoles.Select(ur => ur.RoleId).ToHashSet();
+        var rolesToAdd = roleIdSet
+            .Where(roleId => !existingRoleIds.Contains(roleId))
+            .Select(roleId => new UserRole(userId, roleId))
+            .ToList();
+
+        // Aplicar cambios directamente en el DbSet
+        if (rolesToRemove.Count > 0)
+        {
+            _dbContext.UserRoles.RemoveRange(rolesToRemove);
+        }
+
+        if (rolesToAdd.Count > 0)
+        {
+            _dbContext.UserRoles.AddRange(rolesToAdd);
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 

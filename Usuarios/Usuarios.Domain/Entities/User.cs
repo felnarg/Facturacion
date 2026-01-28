@@ -150,6 +150,12 @@ public class User
         }
     }
 
+    public void ClearRoles()
+    {
+        _userRoles.Clear();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public IEnumerable<string> GetActiveRoleCodes()
     {
         return _userRoles

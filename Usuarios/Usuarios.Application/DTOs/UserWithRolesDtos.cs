@@ -20,6 +20,11 @@ public sealed record UserWithRolesDto(
     DateTime UpdatedAt);
 
 /// <summary>
+/// Solicitud para asignar roles a un usuario
+/// </summary>
+public sealed record AssignUserRolesRequest(IReadOnlyList<string> RoleCodes);
+
+/// <summary>
 /// Request para asignar roles a un usuario
 /// </summary>
 public sealed record AssignRolesRequest(IReadOnlyList<string> RoleCodes);

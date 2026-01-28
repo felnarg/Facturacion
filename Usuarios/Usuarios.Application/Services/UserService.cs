@@ -10,10 +10,12 @@ namespace Usuarios.Application.Services;
 public sealed class UserService : IUserService
 {
     private readonly IUserRepository _repository;
+    private readonly IRoleRepository _roleRepository;
 
-    public UserService(IUserRepository repository)
+    public UserService(IUserRepository repository, IRoleRepository roleRepository)
     {
         _repository = repository;
+        _roleRepository = roleRepository;
     }
 
     public async Task<IReadOnlyList<UserWithRolesDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -58,6 +60,31 @@ public sealed class UserService : IUserService
 
         user.Deactivate();
         await _repository.UpdateAsync(user, cancellationToken);
+    }
+
+    public async Task AssignRolesAsync(Guid userId, AssignUserRolesRequest request, CancellationToken cancellationToken = default)
+    {
+        // Verificar que el usuario existe
+        var user = await _repository.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            throw new InvalidOperationException($"Usuario con ID '{userId}' no encontrado.");
+        }
+
+        // Validar y obtener IDs de los roles solicitados
+        var roleIds = new List<Guid>();
+        foreach (var code in request.RoleCodes)
+        {
+            var role = await _roleRepository.GetByCodeAsync(code, cancellationToken);
+            if (role is null)
+            {
+                throw new InvalidOperationException($"El rol '{code}' no existe.");
+            }
+            roleIds.Add(role.Id);
+        }
+
+        // Delegar la sincronización al repositorio
+        await _repository.SyncUserRolesAsync(userId, roleIds, cancellationToken);
     }
 
     private static string ComputeHash(string input)
