@@ -127,7 +127,7 @@ export default function ProveedoresPage() {
   };
 
   return (
-    <Protected permission="compras">
+    <Protected module="compras">
       <div className="space-y-6">
         <header>
           <h2 className="text-xl font-semibold text-zinc-900">Proveedores</h2>

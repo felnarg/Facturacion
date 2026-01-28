@@ -8,86 +8,98 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { AuthUser } from "@/lib/auth";
+import type { AuthResponse, AuthUser } from "@/lib/auth";
 import {
   clearAuth,
-  getRole,
+  getStoredUser,
   getToken,
-  parseJwt,
-  setRole,
-  setToken,
+  isTokenExpired,
+  setAuthData,
 } from "@/lib/auth";
-import type { Permission, Role } from "@/lib/permissions";
-import { ROLE_PERMISSIONS } from "@/lib/permissions";
+import type { Permission } from "@/lib/permissions";
+import { canAccessModule, hasPermission } from "@/lib/permissions";
 
 type AuthContextValue = {
   user: AuthUser;
   permissions: Permission[];
   isAuthenticated: boolean;
-  login: (token: string, role: Role) => void;
+  login: (response: AuthResponse) => void;
   logout: () => void;
-  setUserRole: (role: Role) => void;
+  hasPermission: (permission: Permission) => boolean;
+  canAccessModule: (module: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser>({});
+  const [user, setUser] = useState<AuthUser>({ roles: [], permissions: [] });
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     const token = getToken();
-    const role = getRole();
-    const parsed = parseJwt(token);
-    setUser({
-      ...parsed,
-      token,
-      role,
-    });
+    const storedUser = getStoredUser();
+
+    // Verificar si el token ha expirado
+    if (token && isTokenExpired(token)) {
+      clearAuth();
+      setUser({ roles: [], permissions: [] });
+    } else {
+      setUser({
+        ...storedUser,
+        token,
+      });
+    }
+    setIsHydrated(true);
   }, []);
 
-  const login = useCallback((token: string, role: Role) => {
-    setToken(token);
-    setRole(role);
-    const parsed = parseJwt(token);
+  const login = useCallback((response: AuthResponse) => {
+    setAuthData(response);
     setUser({
-      ...parsed,
-      token,
-      role,
+      id: response.userId,
+      email: response.email,
+      name: response.name,
+      token: response.token,
+      roles: response.roles,
+      permissions: response.permissions,
     });
   }, []);
 
   const logout = useCallback(() => {
     clearAuth();
-    setUser({});
+    setUser({ roles: [], permissions: [] });
   }, []);
 
-  const setUserRole = useCallback((role: Role) => {
-    setRole(role);
-    setUser((prev) => ({
-      ...prev,
-      role,
-    }));
-  }, []);
+  const checkPermission = useCallback(
+    (permission: Permission) => {
+      return hasPermission(permission, user.permissions);
+    },
+    [user.permissions]
+  );
 
-  const permissions = useMemo<Permission[]>(() => {
-    if (!user.role) {
-      return [];
-    }
-
-    return ROLE_PERMISSIONS[user.role] ?? [];
-  }, [user.role]);
+  const checkModuleAccess = useCallback(
+    (module: string) => {
+      return canAccessModule(module, user.permissions);
+    },
+    [user.permissions]
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      permissions,
-      isAuthenticated: Boolean(user.token),
+      permissions: user.permissions,
+      isAuthenticated: Boolean(user.token) && !isTokenExpired(user.token ?? ""),
       login,
       logout,
-      setUserRole,
+      hasPermission: checkPermission,
+      canAccessModule: checkModuleAccess,
     }),
-    [login, logout, permissions, setUserRole, user]
+    [checkModuleAccess, checkPermission, login, logout, user]
   );
+
+  // Evitar flash de contenido no autenticado durante la hidratación
+  if (!isHydrated) {
+    return null;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

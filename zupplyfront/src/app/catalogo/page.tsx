@@ -187,7 +187,7 @@ export default function CatalogoPage() {
   };
 
   return (
-    <Protected permission="catalogo">
+    <Protected module="catalogo">
       <div className="space-y-6">
         <header>
           <h2 className="text-xl font-semibold text-zinc-900">Catálogo</h2>

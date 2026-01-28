@@ -28,6 +28,77 @@ public sealed class RbacSeeder
         await SeedPermissionsAsync(cancellationToken);
         await SeedRolesAsync(cancellationToken);
         await SeedRolePermissionsAsync(cancellationToken);
+        await SeedDefaultAdminAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Crea un usuario administrador por defecto si no existe ningún usuario con rol superadmin
+    /// </summary>
+    private async Task SeedDefaultAdminAsync(CancellationToken cancellationToken)
+    {
+        // Verificar si ya existe un superadmin
+        var superAdminRole = await _dbContext.Roles
+            .FirstOrDefaultAsync(r => r.Code == RoleCodes.SuperAdmin, cancellationToken);
+        
+        if (superAdminRole is null)
+        {
+            _logger.LogWarning("No se encontró el rol superadmin");
+            return;
+        }
+
+        var existingSuperAdmin = await _dbContext.UserRoles
+            .Include(ur => ur.User)
+            .Where(ur => ur.RoleId == superAdminRole.Id && (ur.ExpiresAt == null || ur.ExpiresAt > DateTime.UtcNow))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (existingSuperAdmin is not null)
+        {
+            _logger.LogInformation("Ya existe un usuario superadmin: {Email}", existingSuperAdmin.User.Email);
+            return;
+        }
+
+        // Crear usuario admin por defecto
+        const string defaultEmail = "admin@zupply.com";
+        const string defaultPassword = "Admin123!";
+        
+        // Verificar si ya existe el email
+        var existingUser = await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == defaultEmail, cancellationToken);
+
+        if (existingUser is not null)
+        {
+            // Asignar rol superadmin al usuario existente
+            var userRole = new UserRole(existingUser.Id, superAdminRole.Id);
+            _dbContext.UserRoles.Add(userRole);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Se asignó rol superadmin al usuario existente: {Email}", defaultEmail);
+            return;
+        }
+
+        // Crear nuevo usuario
+        var passwordHash = ComputeHash(defaultPassword);
+        var adminUser = new User("Administrador", defaultEmail, passwordHash);
+        
+        // Agregar rol superadmin
+        var adminUserRole = new UserRole(adminUser.Id, superAdminRole.Id);
+        adminUser.AddRole(adminUserRole);
+        
+        _dbContext.Users.Add(adminUser);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        
+        _logger.LogInformation("═════════════════════════════════════════════════════════════");
+        _logger.LogInformation("✓ Usuario administrador creado:");
+        _logger.LogInformation("  Email: {Email}", defaultEmail);
+        _logger.LogInformation("  Password: {Password}", defaultPassword);
+        _logger.LogInformation("  ¡IMPORTANTE: Cambia esta contraseña después del primer login!");
+        _logger.LogInformation("═════════════════════════════════════════════════════════════");
+    }
+
+    private static string ComputeHash(string input)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
+        return Convert.ToBase64String(bytes);
     }
 
     private async Task SeedPermissionsAsync(CancellationToken cancellationToken)

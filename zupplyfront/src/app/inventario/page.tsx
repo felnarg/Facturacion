@@ -157,7 +157,7 @@ export default function InventarioPage() {
   };
 
   return (
-    <Protected permission="inventario">
+    <Protected module="inventario">
       <div className="space-y-6">
         <header>
           <h2 className="text-xl font-semibold text-zinc-900">Inventario</h2>

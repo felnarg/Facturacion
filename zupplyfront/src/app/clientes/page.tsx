@@ -57,7 +57,7 @@ export default function ClientesPage() {
   };
 
   return (
-    <Protected permission="clientes">
+    <Protected module="clientes">
       <div className="space-y-6">
         <header>
           <h2 className="text-xl font-semibold text-zinc-900">Clientes</h2>

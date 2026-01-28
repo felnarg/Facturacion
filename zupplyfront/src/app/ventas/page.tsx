@@ -225,7 +225,7 @@ export default function VentasPage() {
   };
 
   return (
-    <Protected permission="ventas">
+    <Protected module="ventas">
       <div className="space-y-6 relative">
         <header>
           <h2 className="text-xl font-semibold text-zinc-900">Ventas</h2>
