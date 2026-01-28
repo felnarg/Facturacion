@@ -72,6 +72,15 @@ public sealed class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<User>> GetAllWithRolesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Users.AsNoTracking()
+            .Include(user => user.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .OrderBy(user => user.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<User>> GetAllActiveAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users.AsNoTracking()

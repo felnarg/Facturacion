@@ -16,24 +16,48 @@ public sealed class UserService : IUserService
         _repository = repository;
     }
 
-    public async Task<IReadOnlyList<UserDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<UserWithRolesDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var users = await _repository.GetAllAsync(cancellationToken);
-        return users.Select(Map).ToList();
+        var users = await _repository.GetAllWithRolesAsync(cancellationToken);
+        return users.Select(MapWithRoles).ToList();
     }
 
-    public async Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<UserWithRolesDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _repository.GetByIdAsync(id, cancellationToken);
-        return user is null ? null : Map(user);
+        var user = await _repository.GetByIdWithRolesAsync(id, cancellationToken);
+        return user is null ? null : MapWithRoles(user);
     }
 
-    public async Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
+    public async Task<UserWithRolesDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
         var passwordHash = ComputeHash(request.Password);
         var user = new User(request.Name, request.Email, passwordHash);
         await _repository.AddAsync(user, cancellationToken);
-        return Map(user);
+        return MapWithRoles(user);
+    }
+
+    public async Task ActivateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = await _repository.GetByIdAsync(id, cancellationToken);
+        if (user is null)
+        {
+            throw new InvalidOperationException("Usuario no encontrado.");
+        }
+
+        user.Activate();
+        await _repository.UpdateAsync(user, cancellationToken);
+    }
+
+    public async Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = await _repository.GetByIdAsync(id, cancellationToken);
+        if (user is null)
+        {
+            throw new InvalidOperationException("Usuario no encontrado.");
+        }
+
+        user.Deactivate();
+        await _repository.UpdateAsync(user, cancellationToken);
     }
 
     private static string ComputeHash(string input)
@@ -43,12 +67,19 @@ public sealed class UserService : IUserService
         return Convert.ToBase64String(bytes);
     }
 
-    private static UserDto Map(User user)
+    private static UserWithRolesDto MapWithRoles(User user)
     {
-        return new UserDto(
+        var roles = user.GetActiveRoleCodes().ToList();
+        
+        return new UserWithRolesDto(
             user.Id,
-            user.Name,
             user.Email,
+            user.Name,
+            user.PhoneNumber,
+            user.ProfilePictureUrl,
+            user.IsActive,
+            user.LastLoginAt,
+            roles,
             user.CreatedAt,
             user.UpdatedAt);
     }

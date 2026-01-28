@@ -263,7 +263,7 @@ export default function UsuariosPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
-                          {userRow.roles.length === 0 ? (
+                          {!userRow.roles || userRow.roles.length === 0 ? (
                             <span className="text-xs text-zinc-400">
                               Sin roles
                             </span>
@@ -282,8 +282,8 @@ export default function UsuariosPage() {
                       <td className="px-4 py-3">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${userRow.isActive
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-zinc-100 text-zinc-500"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-zinc-100 text-zinc-500"
                             }`}
                         >
                           {userRow.isActive ? "Activo" : "Inactivo"}
@@ -316,8 +316,8 @@ export default function UsuariosPage() {
                             <button
                               onClick={() => handleToggleActive(userRow)}
                               className={`text-xs ${userRow.isActive
-                                  ? "text-amber-600"
-                                  : "text-emerald-600"
+                                ? "text-amber-600"
+                                : "text-emerald-600"
                                 } hover:underline`}
                             >
                               {userRow.isActive ? "Desactivar" : "Activar"}

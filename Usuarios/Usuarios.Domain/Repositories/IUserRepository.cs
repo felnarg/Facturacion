@@ -11,6 +11,7 @@ public interface IUserRepository
     Task<User?> GetByEmailWithRolesAsync(string email, CancellationToken cancellationToken = default);
     Task<User?> GetByEmailWithRolesAndPermissionsAsync(string email, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<User>> GetAllWithRolesAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetAllActiveAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetByRoleIdAsync(Guid roleId, CancellationToken cancellationToken = default);
     Task AddAsync(User user, CancellationToken cancellationToken = default);
