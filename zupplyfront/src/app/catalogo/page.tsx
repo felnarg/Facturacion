@@ -25,14 +25,14 @@ type Product = {
 const emptyForm = {
   name: "",
   description: "",
-  price: "0",
+  price: "",
   supplierProductCode: "",
   internalProductCode: "",
-  salePercentage: "30",
-  consumptionTaxPercentage: "0",
-  wholesaleSalePercentage: "25",
-  specialSalePercentage: "20",
-  iva: "19",
+  salePercentage: "",
+  consumptionTaxPercentage: "",
+  wholesaleSalePercentage: "",
+  specialSalePercentage: "",
+  iva: "",
 };
 
 
