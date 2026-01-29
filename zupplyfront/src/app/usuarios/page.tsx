@@ -111,7 +111,7 @@ export default function UsuariosPage() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function UsersTabContent() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -120,6 +120,7 @@ function UsersTabContent() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
 
   // Ref for focus restoration
   const roleButtonRef = useRef<HTMLButtonElement>(null);
@@ -132,6 +133,14 @@ function UsersTabContent() {
       setSelectedUser(null);
     },
     returnFocusRef: roleButtonRef,
+  });
+
+  useModalKeyboard({
+    isOpen: showDeleteUserModal,
+    onClose: () => {
+      setShowDeleteUserModal(false);
+      setSelectedUser(null);
+    },
   });
 
   const loadUsers = async () => {
@@ -231,6 +240,27 @@ function UsersTabContent() {
         ? prev.filter((r) => r !== roleCode)
         : [...prev, roleCode]
     );
+  };
+
+  const openDeleteUserModal = (targetUser: User) => {
+    setSelectedUser(targetUser);
+    setShowDeleteUserModal(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    try {
+      await apiRequest(
+        `/api/users/${selectedUser.id}`,
+        { method: "DELETE" },
+        user.token
+      );
+      setShowDeleteUserModal(false);
+      setSelectedUser(null);
+      await loadUsers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error eliminando usuario");
+    }
   };
 
   return (
@@ -395,6 +425,15 @@ function UsersTabContent() {
                             {userRow.isActive ? "Desactivar" : "Activar"}
                           </button>
                         </Protected>
+                        <Protected permission="users.delete" fallback={null}>
+                          <span className="text-zinc-300">|</span>
+                          <button
+                            onClick={() => openDeleteUserModal(userRow)}
+                            className="text-xs text-rose-600 hover:text-rose-800 hover:underline"
+                          >
+                            Eliminar
+                          </button>
+                        </Protected>
                       </div>
                     </td>
                   </tr>
@@ -463,6 +502,40 @@ function UsersTabContent() {
           </div>
         </div>
       )}
+      {/* Modal Eliminar Usuario */}
+      {showDeleteUserModal && selectedUser && (
+        <div className="modal-backdrop">
+          <div className="modal-content max-w-md">
+            <h3 className="text-lg font-semibold text-zinc-900">
+              Confirmar Eliminación
+            </h3>
+            <p className="mt-2 text-sm text-zinc-600">
+              ¿Estás seguro que deseas eliminar al usuario <strong>{selectedUser.name}</strong>?
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Esta acción eliminará permanentemente al usuario y su acceso al sistema.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteUserModal(false);
+                  setSelectedUser(null);
+                }}
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+              >
+                Eliminar Usuario
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -484,6 +557,7 @@ function RolesTabContent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
 
   // Formulario de creación/edición
@@ -493,6 +567,33 @@ function RolesTabContent() {
     description: "",
     hierarchyLevel: 50,
     permissionCodes: [] as string[],
+  });
+
+  // Hooks para cerrar modales con Escape
+  useModalKeyboard({
+    isOpen: showCreateModal,
+    onClose: () => setShowCreateModal(false),
+  });
+  useModalKeyboard({
+    isOpen: showEditModal,
+    onClose: () => {
+      setShowEditModal(false);
+      setSelectedRole(null);
+    },
+  });
+  useModalKeyboard({
+    isOpen: showPermissionsModal,
+    onClose: () => {
+      setShowPermissionsModal(false);
+      setSelectedRole(null);
+    },
+  });
+  useModalKeyboard({
+    isOpen: showDeleteModal,
+    onClose: () => {
+      setShowDeleteModal(false);
+      setSelectedRole(null);
+    },
   });
 
   const canManageRoles = hasPermission("roles.manage");
@@ -653,6 +754,32 @@ function RolesTabContent() {
     }));
   };
 
+  const openDeleteModal = (role: RoleDto) => {
+    setSelectedRole(role);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteRole = async () => {
+    if (!selectedRole) return;
+
+    try {
+      await apiRequest(
+        `/api/roles/${selectedRole.id}`,
+        { method: "DELETE" },
+        user.token
+      );
+      setShowDeleteModal(false);
+      setSelectedRole(null);
+      await loadRoles();
+    } catch (err) {
+      // El error puede venir del backend (reglas de negocio)
+      setError(
+        err instanceof Error ? err.message : "Error eliminando el rol"
+      );
+      setShowDeleteModal(false); // Cerramos el modal para mostrar el error en la pantalla principal
+    }
+  };
+
   return (
     <Protected permission="roles.read">
       {/* Botón crear rol */}
@@ -759,7 +886,7 @@ function RolesTabContent() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-3">
                         {canManageRoles && !role.isSystemRole && (
                           <button
                             onClick={() => openEditModal(role)}
@@ -776,7 +903,12 @@ function RolesTabContent() {
                             Permisos
                           </button>
                         )}
-                        {canManageRoles && !role.isSystemRole && (
+
+                        {(canManageRoles || canManagePermissions) && (
+                          <span className="text-zinc-300">|</span>
+                        )}
+
+                        {canManageRoles && (
                           <button
                             onClick={() => handleToggleActive(role)}
                             className={`text-xs ${role.isActive
@@ -786,6 +918,18 @@ function RolesTabContent() {
                           >
                             {role.isActive ? "Desactivar" : "Activar"}
                           </button>
+                        )}
+
+                        {canManageRoles && !role.isSystemRole && (
+                          <>
+                            <span className="text-zinc-300">|</span>
+                            <button
+                              onClick={() => openDeleteModal(role)}
+                              className="text-xs text-rose-600 hover:text-rose-800 hover:underline"
+                            >
+                              Eliminar
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -1038,6 +1182,41 @@ function RolesTabContent() {
                   Guardar Permisos
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Eliminar Rol */}
+      {showDeleteModal && selectedRole && (
+        <div className="modal-backdrop">
+          <div className="modal-content max-w-md">
+            <h3 className="text-lg font-semibold text-zinc-900">
+              Confirmar Eliminación
+            </h3>
+            <p className="mt-2 text-sm text-zinc-600">
+              ¿Estás seguro que deseas eliminar el rol <strong>{selectedRole.name}</strong>?
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Esta acción no se puede deshacer. No podrás eliminarlo si tiene usuarios asignados.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedRole(null);
+                }}
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteRole}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+              >
+                Eliminar Rol
+              </button>
             </div>
           </div>
         </div>
