@@ -829,7 +829,7 @@ export default function ComprasPage() {
 
         <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
           <DevBlockHeader label="cacao" />
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Producto</th>
@@ -844,12 +844,12 @@ export default function ComprasPage() {
             <tbody>
               {purchases.map((purchase) => (
                 <tr key={purchase.id} className="border-t border-zinc-100">
-                  <td className="px-4 py-3">{purchase.productName}</td>
-                  <td className="px-4 py-3">{purchase.internalProductCode}</td>
-                  <td className="px-4 py-3">{purchase.quantity}</td>
-                  <td className="px-4 py-3">{purchase.supplierName}</td>
-                  <td className="px-4 py-3">{purchase.supplierInvoiceNumber}</td>
-                  <td className="px-4 py-3">{purchase.status}</td>
+                  <td className="px-4 py-3 text-zinc-600">{purchase.productName}</td>
+                  <td className="px-4 py-3 text-zinc-600">{purchase.internalProductCode}</td>
+                  <td className="px-4 py-3 text-zinc-600">{purchase.quantity}</td>
+                  <td className="px-4 py-3 text-zinc-600">{purchase.supplierName}</td>
+                  <td className="px-4 py-3 text-zinc-600">{purchase.supplierInvoiceNumber}</td>
+                  <td className="px-4 py-3 text-zinc-600">{purchase.status}</td>
                   <td className="px-4 py-3 text-right">
                     {purchase.status !== "Received" && (
                       <button

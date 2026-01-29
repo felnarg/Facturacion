@@ -273,7 +273,7 @@ export default function InventarioPage() {
 
         <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
           <DevBlockHeader label="trigo" />
-          <table className="w-full text-sm">
+          <table className="w-full text-sm text-zinc-600">
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Producto</th>

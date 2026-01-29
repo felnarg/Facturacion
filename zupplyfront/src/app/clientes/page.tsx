@@ -101,7 +101,7 @@ export default function ClientesPage() {
 
         <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
           <DevBlockHeader label="pampa" />
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3">Nombre</th>
