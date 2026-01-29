@@ -205,4 +205,32 @@ public sealed class RolesController : ControllerBase
             return NotFound(new { message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Elimina un rol permanentemente
+    /// </summary>
+    /// <remarks>
+    /// No se pueden eliminar roles del sistema ni roles con usuarios asignados.
+    /// </remarks>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "RequirePermission:roles.manage")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _roleService.DeleteAsync(id, cancellationToken);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (ex.Message.Contains("sistema") || ex.Message.Contains("usuarios asignados"))
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

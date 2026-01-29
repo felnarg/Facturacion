@@ -95,6 +95,26 @@ public sealed class RoleService : IRoleService
         await _roleRepository.UpdateAsync(role, cancellationToken);
     }
 
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var role = await _roleRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"No se encontró el rol con ID '{id}'.");
+
+        // Validación de negocio: no permitir eliminar roles del sistema
+        if (role.IsSystemRole)
+        {
+            throw new InvalidOperationException("No se puede eliminar un rol del sistema.");
+        }
+
+        // Validación de negocio: no permitir eliminar roles con usuarios asignados
+        if (await _roleRepository.HasUsersAsync(id, cancellationToken))
+        {
+            throw new InvalidOperationException("No se puede eliminar un rol que tiene usuarios asignados. Primero reasigne los usuarios a otro rol.");
+        }
+
+        await _roleRepository.DeleteAsync(role, cancellationToken);
+    }
+
     public async Task AssignPermissionsAsync(Guid roleId, AssignPermissionsRequest request, CancellationToken cancellationToken = default)
     {
         var role = await _roleRepository.GetByIdWithPermissionsAsync(roleId, cancellationToken)

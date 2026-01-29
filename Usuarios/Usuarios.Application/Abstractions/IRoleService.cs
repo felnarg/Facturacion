@@ -15,6 +15,7 @@ public interface IRoleService
     Task<RoleDto> UpdateAsync(Guid id, UpdateRoleRequest request, CancellationToken cancellationToken = default);
     Task ActivateAsync(Guid id, CancellationToken cancellationToken = default);
     Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task AssignPermissionsAsync(Guid roleId, AssignPermissionsRequest request, CancellationToken cancellationToken = default);
     Task RemovePermissionAsync(Guid roleId, string permissionCode, CancellationToken cancellationToken = default);
 }

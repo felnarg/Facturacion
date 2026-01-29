@@ -116,4 +116,24 @@ public sealed class UsersController : ControllerBase
             return StatusCode(500, new { message = "Error assigning roles", detail = ex.Message, stack = ex.StackTrace });
         }
     }
+
+    /// <summary>
+    /// Elimina un usuario permanentemente
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "RequirePermission:users.delete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _userService.DeleteAsync(id, cancellationToken);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

@@ -9,5 +9,6 @@ public interface IUserService
     Task<UserWithRolesDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default);
     Task ActivateAsync(Guid id, CancellationToken cancellationToken = default);
     Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task AssignRolesAsync(Guid userId, AssignUserRolesRequest request, CancellationToken cancellationToken = default);
 }

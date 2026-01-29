@@ -83,4 +83,16 @@ public sealed class RoleRepository : IRoleRepository
         var normalizedCode = code.Trim().ToLowerInvariant();
         return await _dbContext.Roles.AnyAsync(role => role.Code == normalizedCode, cancellationToken);
     }
+
+    public async Task DeleteAsync(Role role, CancellationToken cancellationToken = default)
+    {
+        // Las relaciones RolePermission se eliminan en cascada por la configuración de EF
+        _dbContext.Roles.Remove(role);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasUsersAsync(Guid roleId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.UserRoles.AnyAsync(ur => ur.RoleId == roleId, cancellationToken);
+    }
 }

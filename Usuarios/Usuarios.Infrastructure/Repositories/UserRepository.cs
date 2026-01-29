@@ -116,6 +116,13 @@ public sealed class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(User user, CancellationToken cancellationToken = default)
+    {
+        // Las relaciones UserRole se eliminan en cascada por la configuración de EF
+        _dbContext.Users.Remove(user);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SyncUserRolesAsync(Guid userId, IEnumerable<Guid> roleIds, CancellationToken cancellationToken = default)
     {
         var roleIdSet = roleIds.ToHashSet();

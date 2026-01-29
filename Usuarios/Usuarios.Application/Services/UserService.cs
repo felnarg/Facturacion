@@ -62,6 +62,17 @@ public sealed class UserService : IUserService
         await _repository.UpdateAsync(user, cancellationToken);
     }
 
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = await _repository.GetByIdAsync(id, cancellationToken);
+        if (user is null)
+        {
+            throw new InvalidOperationException("Usuario no encontrado.");
+        }
+
+        await _repository.DeleteAsync(user, cancellationToken);
+    }
+
     public async Task AssignRolesAsync(Guid userId, AssignUserRolesRequest request, CancellationToken cancellationToken = default)
     {
         // Verificar que el usuario existe

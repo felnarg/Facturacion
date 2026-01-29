@@ -15,5 +15,7 @@ public interface IRoleRepository
     Task<IReadOnlyList<Role>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
     Task AddAsync(Role role, CancellationToken cancellationToken = default);
     Task UpdateAsync(Role role, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Role role, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(string code, CancellationToken cancellationToken = default);
+    Task<bool> HasUsersAsync(Guid roleId, CancellationToken cancellationToken = default);
 }
