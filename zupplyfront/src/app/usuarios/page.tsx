@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
 import { ROLE_LABELS, type Role, type Permission } from "@/lib/permissions";
+import { useModalKeyboard } from "@/hooks/useModalKeyboard";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -119,6 +120,19 @@ function UsersTabContent() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [showRoleModal, setShowRoleModal] = useState(false);
+
+  // Ref for focus restoration
+  const roleButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Keyboard handling for role modal
+  useModalKeyboard({
+    isOpen: showRoleModal,
+    onClose: () => {
+      setShowRoleModal(false);
+      setSelectedUser(null);
+    },
+    returnFocusRef: roleButtonRef,
+  });
 
   const loadUsers = async () => {
     setLoading(true);

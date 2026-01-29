@@ -126,3 +126,85 @@ textarea::placeholder {
   background: #9ca3af;
   border-radius: 9999px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* STANDARD TABLE STYLES */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.table-standard {
+  width: 100%;
+  font-size: 0.875rem; /* text-sm */
+}
+
+.table-standard thead {
+  background-color: #fafafa; /* bg-zinc-50 */
+  text-transform: uppercase;
+  font-size: 0.75rem; /* text-xs */
+  color: #71717a; /* text-zinc-500 */
+  text-align: left;
+}
+
+.table-standard th,
+.table-standard td {
+  padding: 0.75rem 1rem;
+}
+
+.table-standard tbody tr {
+  border-top: 1px solid #f4f4f5; /* border-zinc-100 */
+}
+
+.table-standard tbody tr:hover {
+  background-color: #fafafa; /* hover:bg-zinc-50 */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* STANDARD TEXT COLORS */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.text-primary {
+  color: #18181b; /* zinc-900 */
+}
+
+.text-secondary {
+  color: #71717a; /* zinc-500 */
+}
+
+.text-muted {
+  color: #a1a1aa; /* zinc-400 */
+}
+
+.text-error {
+  color: #e11d48; /* rose-600 */
+}
+
+.text-success {
+  color: #059669; /* emerald-600 */
+}
+
+.text-warning {
+  color: #d97706; /* amber-600 */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* MODAL BACKDROP */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 1rem;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 32rem; /* max-w-lg */
+  border-radius: 0.75rem;
+  background-color: white;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}

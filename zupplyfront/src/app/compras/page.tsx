@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
 import { ResizableInputGroup } from "@/components/ResizableInputGroup";
+import { useModalKeyboard } from "@/hooks/useModalKeyboard";
 
 type Purchase = {
   id: string;
@@ -87,12 +88,36 @@ export default function ComprasPage() {
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  const [selectedSupplierIndex, setSelectedSupplierIndex] = useState(-1);
+  const [selectedProductIndex, setSelectedProductIndex] = useState(-1);
 
   // Refs for focus management
   const supplierInputRef = useRef<HTMLInputElement>(null);
   const productNameInputRef = useRef<HTMLInputElement>(null);
   const internalCodeInputRef = useRef<HTMLInputElement>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard handling for supplier modal
+  useModalKeyboard({
+    isOpen: supplierModalOpen,
+    onClose: () => {
+      setSupplierModalOpen(false);
+      setSupplierSearch("");
+      setSelectedSupplierIndex(-1);
+    },
+    returnFocusRef: supplierInputRef,
+  });
+
+  // Keyboard handling for product modal
+  useModalKeyboard({
+    isOpen: productModalOpen,
+    onClose: () => {
+      setProductModalOpen(false);
+      setProductSearch("");
+      setSelectedProductIndex(-1);
+    },
+    returnFocusRef: productNameInputRef,
+  });
 
   const loadPurchases = async () => {
     const data = await apiRequest<Purchase[]>(
@@ -873,18 +898,41 @@ export default function ComprasPage() {
                   placeholder="Buscar por nombre, contacto, email o teléfono"
                   value={supplierSearch}
                   autoFocus
-                  onChange={(event) => setSupplierSearch(event.target.value)}
+                  onChange={(event) => {
+                    setSupplierSearch(event.target.value);
+                    setSelectedSupplierIndex(-1);
+                  }}
                   onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setSupplierModalOpen(false);
-                      setTimeout(() => supplierInputRef.current?.focus(), 0);
+                    if (event.key === "ArrowDown" || (event.key === "Tab" && !event.shiftKey)) {
+                      event.preventDefault();
+                      setSelectedSupplierIndex((prev) =>
+                        prev < suppliers.length - 1 ? prev + 1 : 0
+                      );
+                    } else if (event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey)) {
+                      event.preventDefault();
+                      setSelectedSupplierIndex((prev) =>
+                        prev > 0 ? prev - 1 : suppliers.length - 1
+                      );
+                    } else if (event.key === "Enter" && selectedSupplierIndex >= 0) {
+                      event.preventDefault();
+                      const supplier = suppliers[selectedSupplierIndex];
+                      if (supplier) {
+                        setForm((prev) => ({
+                          ...prev,
+                          supplierId: supplier.id,
+                          supplierName: supplier.name,
+                        }));
+                        setSupplierModalOpen(false);
+                        setSelectedSupplierIndex(-1);
+                        setTimeout(() => supplierInputRef.current?.focus(), 0);
+                      }
                     }
                   }}
                 />
               </div>
 
               <div className="mt-4 max-h-64 overflow-auto rounded-md border border-zinc-100">
-                {suppliers.map((supplier) => (
+                {suppliers.map((supplier, index) => (
                   <button
                     key={supplier.id}
                     onClick={() => {
@@ -894,9 +942,10 @@ export default function ComprasPage() {
                         supplierName: supplier.name,
                       }));
                       setSupplierModalOpen(false);
+                      setSelectedSupplierIndex(-1);
                       setTimeout(() => supplierInputRef.current?.focus(), 0);
                     }}
-                    className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
+                    className={`flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50 ${index === selectedSupplierIndex ? "bg-zinc-100" : ""}`}
                   >
                     <span className="font-medium text-zinc-900">
                       {supplier.name}
@@ -942,26 +991,46 @@ export default function ComprasPage() {
                   placeholder="Busca por nombre, códigos o descripción"
                   value={productSearch}
                   autoFocus
-                  onChange={(event) => setProductSearch(event.target.value)}
+                  onChange={(event) => {
+                    setProductSearch(event.target.value);
+                    setSelectedProductIndex(-1);
+                  }}
                   onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setProductModalOpen(false);
-                      setTimeout(() => productNameInputRef.current?.focus(), 0);
+                    if (event.key === "ArrowDown" || (event.key === "Tab" && !event.shiftKey)) {
+                      event.preventDefault();
+                      setSelectedProductIndex((prev) =>
+                        prev < products.length - 1 ? prev + 1 : 0
+                      );
+                    } else if (event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey)) {
+                      event.preventDefault();
+                      setSelectedProductIndex((prev) =>
+                        prev > 0 ? prev - 1 : products.length - 1
+                      );
+                    } else if (event.key === "Enter" && selectedProductIndex >= 0) {
+                      event.preventDefault();
+                      const product = products[selectedProductIndex];
+                      if (product) {
+                        fillProductForm(product).catch(() => { });
+                        setProductModalOpen(false);
+                        setSelectedProductIndex(-1);
+                        setTimeout(() => productNameInputRef.current?.focus(), 0);
+                      }
                     }
                   }}
                 />
               </div>
 
               <div className="mt-4 max-h-64 overflow-auto rounded-md border border-zinc-100">
-                {products.map((product) => (
+                {products.map((product, index) => (
                   <button
                     key={product.id}
                     onClick={() => {
                       fillProductForm(product).catch(() => { });
                       setProductModalOpen(false);
+                      setSelectedProductIndex(-1);
                       setTimeout(() => productNameInputRef.current?.focus(), 0);
                     }}
-                    className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
+                    className={`flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50 ${index === selectedProductIndex ? "bg-zinc-100" : ""}`}
                   >
                     <span className="font-medium text-zinc-900">
                       {product.name}

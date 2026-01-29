@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
+import { useModalKeyboard } from "@/hooks/useModalKeyboard";
 
 type Stock = {
   productId: string;
@@ -44,9 +45,21 @@ export default function InventarioPage() {
   const [error, setError] = useState("");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
 
   const productNameInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard handling for modal
+  useModalKeyboard({
+    isOpen: productModalOpen,
+    onClose: () => {
+      setProductModalOpen(false);
+      setProductSearch("");
+      setSelectedResultIndex(-1);
+    },
+    returnFocusRef: productNameInputRef,
+  });
 
   const loadStocks = async () => {
     const data = await apiRequest<Stock[]>(
@@ -317,22 +330,42 @@ export default function InventarioPage() {
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
                   placeholder="Busca por nombre, códigos o descripción"
                   value={productSearch}
-                  onChange={(event) => setProductSearch(event.target.value)}
+                  onChange={(event) => {
+                    setProductSearch(event.target.value);
+                    setSelectedResultIndex(-1);
+                  }}
                   onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setProductModalOpen(false);
-                      setTimeout(() => productNameInputRef.current?.focus(), 0);
+                    if (event.key === "ArrowDown" || (event.key === "Tab" && !event.shiftKey)) {
+                      event.preventDefault();
+                      setSelectedResultIndex((prev) =>
+                        prev < products.length - 1 ? prev + 1 : 0
+                      );
+                    } else if (event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey)) {
+                      event.preventDefault();
+                      setSelectedResultIndex((prev) =>
+                        prev > 0 ? prev - 1 : products.length - 1
+                      );
+                    } else if (event.key === "Enter" && selectedResultIndex >= 0) {
+                      event.preventDefault();
+                      const product = products[selectedResultIndex];
+                      if (product) {
+                        selectProduct(product);
+                        setSelectedResultIndex(-1);
+                      }
                     }
                   }}
                 />
               </div>
 
               <div className="mt-4 max-h-64 overflow-auto rounded-md border border-zinc-100">
-                {products.map((product) => (
+                {products.map((product, index) => (
                   <button
                     key={product.id}
-                    onClick={() => selectProduct(product)}
-                    className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
+                    onClick={() => {
+                      selectProduct(product);
+                      setSelectedResultIndex(-1);
+                    }}
+                    className={`flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50 ${index === selectedResultIndex ? "bg-zinc-100" : ""}`}
                   >
                     <span className="font-medium text-zinc-900">
                       {product.name}

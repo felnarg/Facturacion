@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
+import { useModalKeyboard } from "@/hooks/useModalKeyboard";
 
 type Product = {
   id: string;
@@ -51,6 +52,21 @@ export default function CatalogoPage() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
+
+  // Refs for focus management
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard handling for modal
+  useModalKeyboard({
+    isOpen: searchModalOpen,
+    onClose: () => {
+      setSearchModalOpen(false);
+      setSearchTerm("");
+      setSelectedResultIndex(-1);
+    },
+    returnFocusRef: nameInputRef,
+  });
 
   const loadProducts = async () => {
     const data = await apiRequest<Product[]>(
@@ -416,13 +432,50 @@ export default function CatalogoPage() {
                   onChange={(event) => {
                     const value = event.target.value;
                     setSearchTerm(value);
+                    setSelectedResultIndex(-1);
                     searchProducts(value).catch(() => { });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowDown" || (e.key === "Tab" && !e.shiftKey)) {
+                      e.preventDefault();
+                      setSelectedResultIndex((prev) =>
+                        prev < searchResults.length - 1 ? prev + 1 : 0
+                      );
+                    } else if (e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey)) {
+                      e.preventDefault();
+                      setSelectedResultIndex((prev) =>
+                        prev > 0 ? prev - 1 : searchResults.length - 1
+                      );
+                    } else if (e.key === "Enter" && selectedResultIndex >= 0) {
+                      e.preventDefault();
+                      const product = searchResults[selectedResultIndex];
+                      if (product) {
+                        setForm({
+                          name: product.name,
+                          description: product.description,
+                          price: String(product.price),
+                          salePercentage: String(product.salePercentage),
+                          consumptionTaxPercentage: String(product.consumptionTaxPercentage),
+                          wholesaleSalePercentage: String(product.wholesaleSalePercentage),
+                          specialSalePercentage: String(product.specialSalePercentage),
+                          iva: String(product.iva),
+                          supplierProductCode: String(product.supplierProductCode),
+                          internalProductCode: String(product.internalProductCode),
+                        });
+                        setEditing(product);
+                        setSearchModalOpen(false);
+                        setSearchTerm("");
+                        setSearchResults([]);
+                        setSelectedResultIndex(-1);
+                        setTimeout(() => nameInputRef.current?.focus(), 0);
+                      }
+                    }
                   }}
                 />
               </div>
 
               <div className="mt-4 max-h-72 overflow-auto rounded-md border border-zinc-100">
-                {searchResults.map((product) => (
+                {searchResults.map((product, index) => (
                   <button
                     key={product.id}
                     onClick={() => {
@@ -442,8 +495,10 @@ export default function CatalogoPage() {
                       setSearchModalOpen(false);
                       setSearchTerm("");
                       setSearchResults([]);
+                      setSelectedResultIndex(-1);
+                      setTimeout(() => nameInputRef.current?.focus(), 0);
                     }}
-                    className="flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50"
+                    className={`flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50 ${index === selectedResultIndex ? "bg-zinc-100" : ""}`}
                   >
                     <span className="font-medium text-zinc-900">
                       {product.name}

@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
 import { ResizableInputGroup } from "@/components/ResizableInputGroup";
+import { useModalKeyboard } from "@/hooks/useModalKeyboard";
 
 type Product = {
   id: string;
@@ -53,6 +54,7 @@ export default function VentasPage() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [selectedProductIndex, setSelectedProductIndex] = useState(-1);
 
   const [error, setError] = useState("");
 
@@ -61,6 +63,26 @@ export default function VentasPage() {
   const productInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const paymentInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard handling for product modal
+  useModalKeyboard({
+    isOpen: isProductModalOpen,
+    onClose: () => {
+      setIsProductModalOpen(false);
+      setProductSearch("");
+      setSelectedProductIndex(-1);
+    },
+    returnFocusRef: productInputRef,
+  });
+
+  // Keyboard handling for payment modal
+  useModalKeyboard({
+    isOpen: isPaymentModalOpen,
+    onClose: () => {
+      setIsPaymentModalOpen(false);
+    },
+    returnFocusRef: productInputRef,
+  });
 
 
 
@@ -403,11 +425,28 @@ export default function VentasPage() {
                   className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
                   placeholder="Buscar producto..."
                   value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
+                  onChange={(e) => {
+                    setProductSearch(e.target.value);
+                    setSelectedProductIndex(-1);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      setIsProductModalOpen(false);
-                      productInputRef.current?.focus();
+                    if (e.key === "ArrowDown" || (e.key === "Tab" && !e.shiftKey)) {
+                      e.preventDefault();
+                      setSelectedProductIndex((prev) =>
+                        prev < products.length - 1 ? prev + 1 : 0
+                      );
+                    } else if (e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey)) {
+                      e.preventDefault();
+                      setSelectedProductIndex((prev) =>
+                        prev > 0 ? prev - 1 : products.length - 1
+                      );
+                    } else if (e.key === "Enter" && selectedProductIndex >= 0) {
+                      e.preventDefault();
+                      const product = products[selectedProductIndex];
+                      if (product) {
+                        handleSelectProduct(product);
+                        setSelectedProductIndex(-1);
+                      }
                     }
                   }}
                 />
@@ -419,11 +458,14 @@ export default function VentasPage() {
                   </p>
                 ) : (
                   <ul className="divide-y divide-zinc-100">
-                    {products.map((product) => (
+                    {products.map((product, index) => (
                       <li
                         key={product.id}
-                        className="cursor-pointer px-3 py-2 hover:bg-zinc-50"
-                        onClick={() => handleSelectProduct(product)}
+                        className={`cursor-pointer px-3 py-2 hover:bg-zinc-50 ${index === selectedProductIndex ? "bg-zinc-100" : ""}`}
+                        onClick={() => {
+                          handleSelectProduct(product);
+                          setSelectedProductIndex(-1);
+                        }}
                       >
                         <div className="font-medium text-zinc-900">
                           {product.name}
