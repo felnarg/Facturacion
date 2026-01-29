@@ -854,7 +854,7 @@ function RolesTabContent() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded text-zinc-600 bg-zinc-100 px-1.5 py-0.5 text-xs">
                         {role.code}
                       </code>
                     </td>
