@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
 
 export default function Home() {
-  const { isAuthenticated, permissions } = useAuth();
+  const { isAuthenticated, canAccessModule } = useAuth();
 
   const cards = [
     {
@@ -73,7 +73,7 @@ export default function Home() {
       <Protected>
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {cards
-            .filter((card) => permissions.includes(card.key as never))
+            .filter((card) => canAccessModule(card.key))
             .map((card) => (
               <ModuleCard
                 key={card.key}
