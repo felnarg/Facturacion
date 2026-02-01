@@ -1,0 +1,12 @@
+Especificaciones estrictas para desarrollo con agentes
+- Usar estructura de carpetas clean architecture api, application, infrastructure, domain
+- principios solid
+- domain driven designe
+- validaciones con fluen api
+- acceso a datos con entity framework
+- comunicación basada en eventos con rabbitMQ 
+- la aplicación se levanta con contenedor Docker (crear Dockerfile)
+- la comunicación entre microservicios se hace con api Gateway
+- ajustar el Docker compose file para desplegar microservicios nuevos dentro de la red Docker
+- revisar Docker compose file siempre al abordar cualquier solicitud del usuario por parte del agente para refrescar contexto de la app
+- Crear migraciones y seed de datos de pruebas cuando un microservicio sea creado y ejecutar migraciones
