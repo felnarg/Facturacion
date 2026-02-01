@@ -132,6 +132,16 @@ public static class Permissions
     
     /// <summary>Ver logs de auditoría del sistema</summary>
     public const string AuditLogsView = "audit.logs.view";
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MÓDULO: KARDEX
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>Ver cuentas y movimientos de crédito</summary>
+    public const string KardexRead = "kardex.read";
+
+    /// <summary>Gestionar cupos y créditos</summary>
+    public const string KardexManage = "kardex.manage";
     
     // ═══════════════════════════════════════════════════════════════════════════
     // MÓDULO: CONFIGURACIÓN DEL SISTEMA
@@ -199,6 +209,10 @@ public static class Permissions
         new(ReportsSales, "Reportes de Ventas", "Permite ver gráficas de ingresos", "reports"),
         new(ReportsInventory, "Reportes de Inventario", "Permite ver reportes de stock y vencimientos", "reports"),
         new(AuditLogsView, "Ver Logs de Auditoría", "Permite ver registros de auditoría del sistema", "audit"),
+
+        // Kardex
+        new(KardexRead, "Ver Kardex", "Permite ver clientes, cupos y movimientos de crédito", "kardex"),
+        new(KardexManage, "Gestionar Kardex", "Permite gestionar cupos y registrar créditos", "kardex"),
         
         // Configuración
         new(SettingsStore, "Configuración de Tienda", "Permite gestionar configuración de sucursal", "settings"),

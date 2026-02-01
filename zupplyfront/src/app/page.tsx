@@ -34,6 +34,12 @@ export default function Home() {
       href: "/ventas",
     },
     {
+      key: "kardex",
+      title: "Kardex",
+      description: "Gestionar cupos y créditos por cliente.",
+      href: "/kardex",
+    },
+    {
       key: "clientes",
       title: "Clientes",
       description: "Gestionar clientes y su historial.",

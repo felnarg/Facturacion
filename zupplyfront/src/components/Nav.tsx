@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Compras", href: "/compras", module: "compras" },
   { label: "Proveedores", href: "/proveedores", module: "compras" },
   { label: "Ventas", href: "/ventas", module: "ventas" },
+  { label: "Kardex", href: "/kardex", module: "kardex" },
   { label: "Clientes", href: "/clientes", module: "clientes" },
   { label: "Usuarios", href: "/usuarios", module: "usuarios" },
 ];

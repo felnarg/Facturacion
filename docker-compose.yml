@@ -129,6 +129,28 @@ services:
     networks:
       - supermercado-network
 
+  kardex-api:
+    image: kardex-api-img
+    build:
+      context: .
+      dockerfile: Kardex/Kardex.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Kardex;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+      - RabbitMQ__Queue=kardex.events
+    ports:
+      - "8086:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
   usuarios-api:
     image: usuarios-api-img
     build:
@@ -164,6 +186,7 @@ services:
       - compras-api
       - ventas-api
       - clientes-api
+      - kardex-api
       - usuarios-api
     networks:
       - supermercado-network

@@ -46,6 +46,8 @@ export default function VentasPage() {
   const [total, setTotal] = useState(0);
   const [saleType, setSaleType] = useState<'detal' | 'mayor' | 'especial'>('detal');
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'credito' | 'datafono'>('efectivo');
+  const [identificationType, setIdentificationType] = useState<'CC' | 'NIT'>('CC');
+  const [identificationNumber, setIdentificationNumber] = useState('');
   const [amountTendered, setAmountTendered] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -214,11 +216,21 @@ export default function VentasPage() {
   const handleCreateSale = () => {
     if (items.length === 0) return;
     setError("");
+
+    if (paymentMethod === 'credito') {
+      if (!identificationNumber.trim()) {
+        setError("Debes ingresar la identificación (CC/NIT) para venta a crédito.");
+        return;
+      }
+      void confirmSale(true);
+      return;
+    }
+
     setIsPaymentModalOpen(true);
   };
 
-  const confirmSale = async () => {
-    if (Number(amountTendered) < roundedTotal) {
+  const confirmSale = async (skipPaymentValidation = false) => {
+    if (!skipPaymentValidation && Number(amountTendered) < roundedTotal) {
       // Prevent completing if payment is insufficient
       return;
     }
@@ -229,7 +241,11 @@ export default function VentasPage() {
         {
           method: "POST",
           body: JSON.stringify({
-            items: items.map(i => ({ productId: i.productId, quantity: i.quantity }))
+            items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+            paymentMethod,
+            totalAmount: grandTotal,
+            customerIdentificationType: paymentMethod === 'credito' ? identificationType : null,
+            customerIdentification: paymentMethod === 'credito' ? identificationNumber : null
           }),
         },
         user.token
@@ -237,6 +253,7 @@ export default function VentasPage() {
       setItems([]);
       setIsPaymentModalOpen(false);
       setAmountTendered("");
+      setIdentificationNumber("");
 
       // Optional: Show success message or toast
       // await loadSales(); // Removed per previous step but usually re-fetching is good practice or just rely on local state if avoiding history table
@@ -304,6 +321,35 @@ export default function VentasPage() {
                 </span>
               </div>
             </div>
+
+            {paymentMethod === 'credito' && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-zinc-500">
+                    Tipo identificación
+                  </label>
+                  <select
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    value={identificationType}
+                    onChange={(e) => setIdentificationType(e.target.value as 'CC' | 'NIT')}
+                  >
+                    <option value="CC">CC</option>
+                    <option value="NIT">NIT</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-zinc-500">
+                    Identificación
+                  </label>
+                  <input
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                    placeholder="Número de identificación"
+                    value={identificationNumber}
+                    onChange={(e) => setIdentificationNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
 
             {/* Row 2: Item Inputs */}

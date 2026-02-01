@@ -174,6 +174,7 @@ public sealed class RbacSeeder
                 Permissions.OrdersCreate, Permissions.OrdersReadAll, Permissions.OrdersStatusUpdate, 
                 Permissions.OrdersRefund, Permissions.OrdersCancel, Permissions.OrdersDiscountApply,
                 Permissions.PosPaymentProcess, Permissions.PosCashierClose, Permissions.PosReceiptPrint, Permissions.PosCashierReadAll,
+                Permissions.KardexRead, Permissions.KardexManage,
                 Permissions.ReportsSales, Permissions.ReportsInventory,
                 Permissions.SettingsStore
             };
@@ -206,6 +207,7 @@ public sealed class RbacSeeder
                 Permissions.OrdersCreate, Permissions.OrdersReadAll, Permissions.OrdersStatusUpdate,
                 Permissions.OrdersRefund, Permissions.OrdersCancel, Permissions.OrdersDiscountApply,
                 Permissions.PosPaymentProcess, Permissions.PosCashierClose, Permissions.PosReceiptPrint, Permissions.PosCashierReadAll,
+                Permissions.KardexRead,
                 Permissions.InventoryStockRead
             };
             AddPermissionsToRole(supervisor, supervisorPermissions, permissions, rolePermissionsToAdd);

@@ -41,6 +41,29 @@ public sealed class SaleService : ISaleService
 
         await _eventBus.PublishAsync(saleCompleted, "sale.completed", cancellationToken);
 
+        if (string.Equals(request.PaymentMethod, "credito", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(request.CustomerIdentificationType) ||
+                string.IsNullOrWhiteSpace(request.CustomerIdentification))
+            {
+                throw new InvalidOperationException("La venta a crédito requiere CC o NIT.");
+            }
+
+            if (!request.TotalAmount.HasValue || request.TotalAmount.Value <= 0)
+            {
+                throw new InvalidOperationException("La venta a crédito requiere un total válido.");
+            }
+
+            var creditSaleRequested = new CreditSaleRequested(
+                sale.Id,
+                request.CustomerIdentificationType,
+                request.CustomerIdentification,
+                request.TotalAmount.Value,
+                DateTime.UtcNow);
+
+            await _eventBus.PublishAsync(creditSaleRequested, "sale.credit.requested", cancellationToken);
+        }
+
         return Map(sale);
     }
 

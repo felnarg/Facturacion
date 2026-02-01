@@ -1,0 +1,12 @@
+namespace Kardex.Infrastructure.Messaging;
+
+public sealed class RabbitMqOptions
+{
+    public string HostName { get; set; } = "localhost";
+    public int Port { get; set; } = 5672;
+    public string UserName { get; set; } = "guest";
+    public string Password { get; set; } = "guest";
+    public string VirtualHost { get; set; } = "/";
+    public string Exchange { get; set; } = "facturacion.events";
+    public string Queue { get; set; } = "kardex.events";
+}

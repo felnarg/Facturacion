@@ -74,7 +74,7 @@ Base: `/api/sales`
 - `GET /api/sales/{id}`
   - Obtiene una venta por `Id`.
 - `POST /api/sales`
-  - Registra una venta nueva.
+  - Registra una venta nueva. Si `paymentMethod` es `credito`, publica evento para Kardex.
 
 ---
 
@@ -87,6 +87,28 @@ Base: `/api/customers`
   - Obtiene un cliente por `Id`.
 - `POST /api/customers`
   - Crea un cliente nuevo.
+
+---
+
+## Kardex (`Kardex.API`)
+Base: `/api/kardex`
+
+- `GET /api/kardex/credit-accounts`
+  - Lista cuentas de crédito. Soporta `?search=...`.
+- `GET /api/kardex/credit-accounts/{id}`
+  - Obtiene una cuenta de crédito por `Id`.
+- `POST /api/kardex/credit-accounts`
+  - Crea una cuenta de crédito (cupo y plazo).
+- `PUT /api/kardex/credit-accounts/{id}`
+  - Actualiza cupo y plazo de una cuenta.
+- `DELETE /api/kardex/credit-accounts/{id}`
+  - Elimina una cuenta de crédito.
+- `GET /api/kardex/credit-accounts/{id}/movements`
+  - Lista movimientos de crédito por cuenta.
+- `POST /api/kardex/credit-accounts/{id}/credit-sales`
+  - Registra una venta a crédito para una cuenta específica.
+- `POST /api/kardex/credit-sales`
+  - Registra una venta a crédito por identificación (CC/NIT).
 
 ---
 
@@ -130,4 +152,7 @@ dominios.
 - `product.salepercentage.updated`
   - Emisor: Compras (al registrar compra con % venta modificado)
   - Consumidor: Catálogo (actualiza % venta del producto si cambió).
+- `sale.credit.requested`
+  - Emisor: Ventas (cuando el pago es a crédito)
+  - Consumidor: Kardex (valida cupo y registra movimiento).
 

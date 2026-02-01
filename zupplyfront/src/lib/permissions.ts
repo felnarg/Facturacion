@@ -69,6 +69,9 @@ export type Permission =
   | "reports.sales"
   | "reports.inventory"
   | "audit.logs.view"
+  // Kardex
+  | "kardex.read"
+  | "kardex.manage"
   // Configuración
   | "settings.store"
   | "settings.system"
@@ -93,6 +96,7 @@ export const MODULE_PERMISSIONS: Record<string, Permission[]> = {
     "pos.payment.process",
   ],
   clientes: ["orders.read.all", "orders.read.own"],
+  kardex: ["kardex.read", "kardex.manage"],
   usuarios: [
     "users.create",
     "users.read",
