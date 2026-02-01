@@ -49,6 +49,19 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasMaxLength(50)
             .IsRequired();
 
+        builder.Property(customer => customer.IsCreditApproved)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(customer => customer.ApprovedCreditLimit)
+            .HasColumnType("decimal(18,2)")
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(customer => customer.ApprovedPaymentTermDays)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.HasIndex(customer => customer.IdentificationNumber)
             .IsUnique();
 

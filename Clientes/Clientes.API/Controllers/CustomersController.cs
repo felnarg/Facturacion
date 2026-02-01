@@ -39,6 +39,18 @@ public sealed class CustomersController : ControllerBase
         return Ok(customer);
     }
 
+    [HttpGet("{id:guid}/credit-approval")]
+    public async Task<ActionResult<object>> GetCreditApproval(Guid id, CancellationToken cancellationToken)
+    {
+        var approval = await _customerService.GetCreditApprovalAsync(id, cancellationToken);
+        if (approval is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new { customerId = id, isCreditApproved = approval.Value });
+    }
+
     [HttpPost]
     public async Task<ActionResult<CustomerDto>> Create(CreateCustomerRequest request, CancellationToken cancellationToken)
     {

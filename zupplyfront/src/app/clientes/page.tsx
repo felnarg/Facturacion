@@ -17,6 +17,9 @@ type Customer = {
   type: "Natural" | "Juridica";
   identificationType: "CC" | "NIT";
   identificationNumber: string;
+  isCreditApproved: boolean;
+  approvedCreditLimit: number;
+  approvedPaymentTermDays: number;
   points: number;
   createdAt: string;
   updatedAt: string;
@@ -38,6 +41,9 @@ export default function ClientesPage() {
     type: "Natural" as Customer["type"],
     identificationType: "CC" as Customer["identificationType"],
     identificationNumber: "",
+    isCreditApproved: false,
+    approvedCreditLimit: "",
+    approvedPaymentTermDays: "",
   });
   const [error, setError] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +102,9 @@ export default function ClientesPage() {
       type: "Natural",
       identificationType: "CC",
       identificationNumber: "",
+      isCreditApproved: false,
+      approvedCreditLimit: "",
+      approvedPaymentTermDays: "",
     });
     setEditingId(null);
   };
@@ -105,12 +114,22 @@ export default function ClientesPage() {
     setError("");
 
     try {
+      const payload = {
+        ...form,
+        approvedCreditLimit: form.isCreditApproved
+          ? Number(form.approvedCreditLimit || 0)
+          : 0,
+        approvedPaymentTermDays: form.isCreditApproved
+          ? Number(form.approvedPaymentTermDays || 0)
+          : 0,
+      };
+
       if (editingId) {
         await apiRequest<Customer>(
           `/api/customers/${editingId}`,
           {
             method: "PUT",
-            body: JSON.stringify(form),
+            body: JSON.stringify(payload),
           },
           user.token
         );
@@ -119,7 +138,7 @@ export default function ClientesPage() {
           "/api/customers",
           {
             method: "POST",
-            body: JSON.stringify(form),
+            body: JSON.stringify(payload),
           },
           user.token
         );
@@ -148,6 +167,9 @@ export default function ClientesPage() {
       type: customer.type,
       identificationType: customer.identificationType,
       identificationNumber: customer.identificationNumber,
+      isCreditApproved: customer.isCreditApproved ?? false,
+      approvedCreditLimit: String(customer.approvedCreditLimit ?? 0),
+      approvedPaymentTermDays: String(customer.approvedPaymentTermDays ?? 0),
     });
   };
 
@@ -329,6 +351,81 @@ export default function ClientesPage() {
               required
             />
           </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-credit">
+              Crédito aprobado
+            </label>
+            <select
+              id="customer-credit"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              value={form.isCreditApproved ? "true" : "false"}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  isCreditApproved: event.target.value === "true",
+                  approvedCreditLimit:
+                    event.target.value === "true" ? prev.approvedCreditLimit : "",
+                  approvedPaymentTermDays:
+                    event.target.value === "true"
+                      ? prev.approvedPaymentTermDays
+                      : "",
+                }))
+              }
+            >
+              <option value="false">No aprobado</option>
+              <option value="true">Aprobado</option>
+            </select>
+          </div>
+          {form.isCreditApproved && (
+            <>
+              <div className="space-y-1">
+                <label
+                  className="text-xs text-zinc-500"
+                  htmlFor="customer-credit-limit"
+                >
+                  Cupo aprobado
+                </label>
+                <input
+                  id="customer-credit-limit"
+                  className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                  placeholder="Cupo aprobado"
+                  type="number"
+                  min="0"
+                  value={form.approvedCreditLimit}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      approvedCreditLimit: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label
+                  className="text-xs text-zinc-500"
+                  htmlFor="customer-credit-days"
+                >
+                  Días permitidos
+                </label>
+                <input
+                  id="customer-credit-days"
+                  className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                  placeholder="Días permitidos"
+                  type="number"
+                  min="1"
+                  value={form.approvedPaymentTermDays}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      approvedPaymentTermDays: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+            </>
+          )}
           <div className="flex flex-wrap gap-2 md:col-span-3">
             <button className="btn-primary">
               {editingId ? "Guardar cambios" : "Crear cliente"}

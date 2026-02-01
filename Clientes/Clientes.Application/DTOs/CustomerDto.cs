@@ -12,6 +12,9 @@ public sealed record CustomerDto(
     CustomerType Type,
     IdentificationType IdentificationType,
     string IdentificationNumber,
+    bool IsCreditApproved,
+    decimal ApprovedCreditLimit,
+    int ApprovedPaymentTermDays,
     int Points,
     DateTime CreatedAt,
     DateTime UpdatedAt);

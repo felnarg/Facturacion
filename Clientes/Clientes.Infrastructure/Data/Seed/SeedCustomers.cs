@@ -22,7 +22,10 @@ public static class SeedCustomers
                 "Calle 10 # 20-30",
                 CustomerType.Natural,
                 IdentificationType.CC,
-                "1234567890"),
+                "1234567890",
+                false,
+                0,
+                0),
             new(
                 "Distribuciones Andina",
                 "contacto@andina.com",
@@ -31,7 +34,10 @@ public static class SeedCustomers
                 "Carrera 45 # 30-12",
                 CustomerType.Juridica,
                 IdentificationType.NIT,
-                "900123456-7")
+                "900123456-7",
+                true,
+                5000000,
+                30)
         };
 
         dbContext.Customers.AddRange(customers);

@@ -37,5 +37,14 @@ public sealed class CreateCustomerRequestValidator : AbstractValidator<CreateCus
         RuleFor(x => x.IdentificationNumber)
             .NotEmpty().WithMessage("El número de identificación es obligatorio.")
             .MaximumLength(50);
+
+        When(x => x.IsCreditApproved, () =>
+        {
+            RuleFor(x => x.ApprovedCreditLimit)
+                .GreaterThan(0).WithMessage("El cupo aprobado debe ser mayor a cero.");
+
+            RuleFor(x => x.ApprovedPaymentTermDays)
+                .GreaterThan(0).WithMessage("Los días permitidos deben ser mayores a cero.");
+        });
     }
 }

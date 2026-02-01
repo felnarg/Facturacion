@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ISaleHistoryRepository, SaleHistoryRepository>();
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMQ"));
+        services.AddSingleton<IEventBus, RabbitMqEventBus>();
         services.AddHostedService<SaleCompletedConsumer>();
 
         return services;

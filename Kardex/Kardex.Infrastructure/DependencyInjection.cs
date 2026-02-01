@@ -22,6 +22,7 @@ public static class DependencyInjection
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMQ"));
         services.AddHostedService<CreditSaleRequestedConsumer>();
+        services.AddHostedService<CustomerCreditApprovedConsumer>();
 
         return services;
     }

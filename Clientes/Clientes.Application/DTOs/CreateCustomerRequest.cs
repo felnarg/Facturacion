@@ -10,4 +10,7 @@ public sealed record CreateCustomerRequest(
     string Address,
     CustomerType Type,
     IdentificationType IdentificationType,
-    string IdentificationNumber);
+    string IdentificationNumber,
+    bool IsCreditApproved,
+    decimal ApprovedCreditLimit,
+    int ApprovedPaymentTermDays);
