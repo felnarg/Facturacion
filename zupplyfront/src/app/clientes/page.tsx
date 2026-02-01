@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Protected } from "@/components/Protected";
 import { DevBlockHeader } from "@/components/DevBlockHeader";
+import { useModalKeyboard } from "@/hooks/useModalKeyboard";
 
 type Customer = {
   id: string;
@@ -24,7 +25,9 @@ type Customer = {
 export default function ClientesPage() {
   const { user } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [search, setSearch] = useState("");
+  const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [selectedCustomerIndex, setSelectedCustomerIndex] = useState(-1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
@@ -37,6 +40,7 @@ export default function ClientesPage() {
     identificationNumber: "",
   });
   const [error, setError] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const loadCustomers = async (term: string) => {
     const query = term.trim()
@@ -51,16 +55,36 @@ export default function ClientesPage() {
   };
 
   useEffect(() => {
+    if (!customerModalOpen) return;
+
+    loadCustomers("").catch((err) =>
+      setError(err instanceof Error ? err.message : "Error cargando clientes")
+    );
+  }, [customerModalOpen]);
+
+  useEffect(() => {
+    if (!customerModalOpen) return;
+
     const timeout = setTimeout(() => {
-      loadCustomers(search).catch((err) =>
+      loadCustomers(customerSearch).catch((err) =>
         setError(
           err instanceof Error ? err.message : "Error cargando clientes"
         )
       );
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timeout);
-  }, [search]);
+  }, [customerSearch, customerModalOpen]);
+
+  useModalKeyboard({
+    isOpen: customerModalOpen,
+    onClose: () => {
+      setCustomerModalOpen(false);
+      setCustomerSearch("");
+      setSelectedCustomerIndex(-1);
+    },
+    returnFocusRef: nameInputRef,
+  });
 
   const resetForm = () => {
     setForm({
@@ -101,7 +125,7 @@ export default function ClientesPage() {
         );
       }
       resetForm();
-      await loadCustomers(search);
+      await loadCustomers(customerSearch);
     } catch (err) {
       setError(
         err instanceof Error
@@ -143,7 +167,7 @@ export default function ClientesPage() {
       if (editingId === id) {
         resetForm();
       }
-      await loadCustomers(search);
+      await loadCustomers(customerSearch);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error eliminando cliente");
     }
@@ -164,94 +188,160 @@ export default function ClientesPage() {
           className="dev-block-container grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-3"
         >
           <DevBlockHeader label="perla" />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Nombre"
-            value={form.name}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, name: event.target.value }))
-            }
-            required
-          />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Correo"
-            value={form.email}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, email: event.target.value }))
-            }
-            required
-          />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Ciudad"
-            value={form.city}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, city: event.target.value }))
-            }
-            required
-          />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Teléfono"
-            value={form.phone}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, phone: event.target.value }))
-            }
-            required
-          />
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm md:col-span-2"
-            placeholder="Dirección"
-            value={form.address}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, address: event.target.value }))
-            }
-            required
-          />
-          <select
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            value={form.type}
-            onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                type: event.target.value as Customer["type"],
-              }))
-            }
-          >
-            <option value="Natural">Persona natural</option>
-            <option value="Juridica">Persona jurídica</option>
-          </select>
-          <select
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            value={form.identificationType}
-            onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                identificationType: event.target.value as Customer["identificationType"],
-              }))
-            }
-          >
-            <option value="CC">CC</option>
-            <option value="NIT">NIT</option>
-          </select>
-          <input
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-            placeholder="Número de identificación"
-            value={form.identificationNumber}
-            onChange={(event) =>
-              setForm((prev) => ({
-                ...prev,
-                identificationNumber: event.target.value,
-              }))
-            }
-            required
-          />
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-name">
+              Nombre
+            </label>
+            <input
+              id="customer-name"
+              ref={nameInputRef}
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              placeholder="Nombre del cliente"
+              value={form.name}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, name: event.target.value }))
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  setCustomerSearch(event.currentTarget.value);
+                  setCustomerModalOpen(true);
+                  setSelectedCustomerIndex(-1);
+                }
+              }}
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-email">
+              Correo
+            </label>
+            <input
+              id="customer-email"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              placeholder="Correo"
+              value={form.email}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, email: event.target.value }))
+              }
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-city">
+              Ciudad
+            </label>
+            <input
+              id="customer-city"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              placeholder="Ciudad"
+              value={form.city}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, city: event.target.value }))
+              }
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-phone">
+              Teléfono
+            </label>
+            <input
+              id="customer-phone"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              placeholder="Teléfono"
+              value={form.phone}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, phone: event.target.value }))
+              }
+              required
+            />
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-xs text-zinc-500" htmlFor="customer-address">
+              Dirección
+            </label>
+            <input
+              id="customer-address"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              placeholder="Dirección"
+              value={form.address}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, address: event.target.value }))
+              }
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-type">
+              Tipo de cliente
+            </label>
+            <select
+              id="customer-type"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              value={form.type}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  type: event.target.value as Customer["type"],
+                }))
+              }
+            >
+              <option value="Natural">Persona natural</option>
+              <option value="Juridica">Persona jurídica</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-id-type">
+              Tipo de identificación
+            </label>
+            <select
+              id="customer-id-type"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              value={form.identificationType}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  identificationType:
+                    event.target.value as Customer["identificationType"],
+                }))
+              }
+            >
+              <option value="CC">CC</option>
+              <option value="NIT">NIT</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-500" htmlFor="customer-id">
+              Número de identificación
+            </label>
+            <input
+              id="customer-id"
+              className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              placeholder="Número de identificación"
+              value={form.identificationNumber}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  identificationNumber: event.target.value,
+                }))
+              }
+              required
+            />
+          </div>
           <div className="flex flex-wrap gap-2 md:col-span-3">
             <button className="btn-primary">
               {editingId ? "Guardar cambios" : "Crear cliente"}
             </button>
             {editingId && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(editingId)}
+                  className="btn-secondary"
+                >
+                  Eliminar
+                </button>
               <button
                 type="button"
                 onClick={resetForm}
@@ -259,94 +349,106 @@ export default function ClientesPage() {
               >
                 Cancelar
               </button>
+              </>
             )}
           </div>
           {error && (
             <p className="md:col-span-3 text-sm text-rose-600">{error}</p>
           )}
         </form>
+        {customerModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="dev-block-container w-full max-w-3xl rounded-xl bg-white p-4 shadow-lg">
+              <DevBlockHeader label="pampa" />
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-zinc-800">
+                  Buscar cliente
+                </h3>
+                <button
+                  onClick={() => setCustomerModalOpen(false)}
+                  className="btn-secondary text-xs"
+                >
+                  Cerrar
+                </button>
+              </div>
 
-        <div className="dev-block-container overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <DevBlockHeader label="pampa" />
-          <div className="flex flex-wrap items-center gap-2 border-b border-zinc-100 p-4">
-            <input
-              className="min-w-[240px] rounded-md border border-zinc-200 px-3 py-2 text-sm"
-              placeholder="Buscar por nombre, email, ciudad, teléfono o CC/NIT..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="btn-secondary"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
-          <table className="w-full min-w-[1200px] text-sm">
-            <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
-              <tr>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Tipo</th>
-                <th className="px-4 py-3">CC/NIT</th>
-                <th className="px-4 py-3">Ciudad</th>
-                <th className="px-4 py-3">Teléfono</th>
-                <th className="px-4 py-3">Dirección</th>
-                <th className="px-4 py-3">Correo</th>
-                <th className="px-4 py-3">Puntos</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((customer) => (
-                <tr key={customer.id} className="border-t border-zinc-100">
-                  <td className="px-4 py-3">{customer.name}</td>
-                  <td className="px-4 py-3">
-                    {customer.type === "Natural" ? "Natural" : "Jurídica"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {customer.identificationType} {customer.identificationNumber}
-                  </td>
-                  <td className="px-4 py-3">{customer.city}</td>
-                  <td className="px-4 py-3">{customer.phone}</td>
-                  <td className="px-4 py-3">{customer.address}</td>
-                  <td className="px-4 py-3">{customer.email}</td>
-                  <td className="px-4 py-3">{customer.points}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        onClick={() => handleEdit(customer)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        onClick={() => handleDelete(customer.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {customers.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="px-4 py-6 text-center text-sm text-zinc-500"
+              <div className="mt-3">
+                <input
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
+                  placeholder="Busca por nombre, correo, ciudad, teléfono o CC/NIT"
+                  value={customerSearch}
+                  autoFocus
+                  onChange={(event) => {
+                    setCustomerSearch(event.target.value);
+                    setSelectedCustomerIndex(-1);
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "ArrowDown" ||
+                      (event.key === "Tab" && !event.shiftKey)
+                    ) {
+                      event.preventDefault();
+                      setSelectedCustomerIndex((prev) =>
+                        prev < customers.length - 1 ? prev + 1 : 0
+                      );
+                    } else if (
+                      event.key === "ArrowUp" ||
+                      (event.key === "Tab" && event.shiftKey)
+                    ) {
+                      event.preventDefault();
+                      setSelectedCustomerIndex((prev) =>
+                        prev > 0 ? prev - 1 : customers.length - 1
+                      );
+                    } else if (
+                      event.key === "Enter" &&
+                      selectedCustomerIndex >= 0
+                    ) {
+                      event.preventDefault();
+                      const customer = customers[selectedCustomerIndex];
+                      if (customer) {
+                        handleEdit(customer);
+                        setCustomerModalOpen(false);
+                        setSelectedCustomerIndex(-1);
+                        setTimeout(() => nameInputRef.current?.focus(), 0);
+                      }
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="mt-4 max-h-72 overflow-auto rounded-md border border-zinc-100">
+                {customers.map((customer, index) => (
+                  <button
+                    key={customer.id}
+                    onClick={() => {
+                      handleEdit(customer);
+                      setCustomerModalOpen(false);
+                      setSelectedCustomerIndex(-1);
+                      setTimeout(() => nameInputRef.current?.focus(), 0);
+                    }}
+                    className={`flex w-full flex-col gap-1 border-b border-zinc-100 px-3 py-3 text-left text-sm hover:bg-zinc-50 ${index === selectedCustomerIndex ? "bg-zinc-100" : ""}`}
                   >
-                    No hay clientes registrados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    <span className="font-medium text-zinc-900">
+                      {customer.name}
+                    </span>
+                    <span className="text-xs text-zinc-500">
+                      {customer.identificationType} {customer.identificationNumber} ·{" "}
+                      {customer.city} · {customer.phone}
+                    </span>
+                    <span className="text-xs text-zinc-400">
+                      {customer.email} · {customer.address}
+                    </span>
+                  </button>
+                ))}
+                {customers.length === 0 && (
+                  <div className="px-3 py-6 text-center text-xs text-zinc-500">
+                    No hay resultados.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Protected>
   );
