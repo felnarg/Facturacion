@@ -23,6 +23,35 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasIndex(customer => customer.Email)
             .IsUnique();
 
+        builder.Property(customer => customer.City)
+            .HasMaxLength(120)
+            .IsRequired();
+
+        builder.Property(customer => customer.Phone)
+            .HasMaxLength(40)
+            .IsRequired();
+
+        builder.Property(customer => customer.Address)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(customer => customer.Type)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
+        builder.Property(customer => customer.IdentificationType)
+            .HasConversion<string>()
+            .HasMaxLength(10)
+            .IsRequired();
+
+        builder.Property(customer => customer.IdentificationNumber)
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.HasIndex(customer => customer.IdentificationNumber)
+            .IsUnique();
+
         builder.Property(customer => customer.Points)
             .IsRequired();
 

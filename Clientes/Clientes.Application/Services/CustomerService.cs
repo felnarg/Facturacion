@@ -20,6 +20,12 @@ public sealed class CustomerService : ICustomerService
         return customers.Select(Map).ToList();
     }
 
+    public async Task<IReadOnlyList<CustomerDto>> SearchAsync(string search, CancellationToken cancellationToken = default)
+    {
+        var customers = await _repository.SearchAsync(search, cancellationToken);
+        return customers.Select(Map).ToList();
+    }
+
     public async Task<CustomerDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var customer = await _repository.GetByIdAsync(id, cancellationToken);
@@ -28,9 +34,54 @@ public sealed class CustomerService : ICustomerService
 
     public async Task<CustomerDto> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken = default)
     {
-        var customer = new Customer(request.Name, request.Email);
+        var customer = new Customer(
+            request.Name,
+            request.Email,
+            request.City,
+            request.Phone,
+            request.Address,
+            request.Type,
+            request.IdentificationType,
+            request.IdentificationNumber);
         await _repository.AddAsync(customer, cancellationToken);
         return Map(customer);
+    }
+
+    public async Task<CustomerDto?> UpdateAsync(
+        Guid id,
+        UpdateCustomerRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var customer = await _repository.GetByIdAsync(id, cancellationToken);
+        if (customer is null)
+        {
+            return null;
+        }
+
+        customer.UpdateDetails(
+            request.Name,
+            request.Email,
+            request.City,
+            request.Phone,
+            request.Address,
+            request.Type,
+            request.IdentificationType,
+            request.IdentificationNumber);
+
+        await _repository.UpdateAsync(customer, cancellationToken);
+        return Map(customer);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var customer = await _repository.GetByIdAsync(id, cancellationToken);
+        if (customer is null)
+        {
+            return false;
+        }
+
+        await _repository.DeleteAsync(customer, cancellationToken);
+        return true;
     }
 
     private static CustomerDto Map(Customer customer)
@@ -39,6 +90,12 @@ public sealed class CustomerService : ICustomerService
             customer.Id,
             customer.Name,
             customer.Email,
+            customer.City,
+            customer.Phone,
+            customer.Address,
+            customer.Type,
+            customer.IdentificationType,
+            customer.IdentificationNumber,
             customer.Points,
             customer.CreatedAt,
             customer.UpdatedAt);

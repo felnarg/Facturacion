@@ -26,6 +26,22 @@ public sealed class CustomerRepository : ICustomerRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Customer>> SearchAsync(string search, CancellationToken cancellationToken = default)
+    {
+        var normalized = search.Trim().ToLowerInvariant();
+
+        return await _dbContext.Customers.AsNoTracking()
+            .Where(customer =>
+                customer.Name.ToLower().Contains(normalized) ||
+                customer.Email.ToLower().Contains(normalized) ||
+                customer.City.ToLower().Contains(normalized) ||
+                customer.Address.ToLower().Contains(normalized) ||
+                customer.Phone.ToLower().Contains(normalized) ||
+                customer.IdentificationNumber.ToLower().Contains(normalized))
+            .OrderBy(customer => customer.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Customer customer, CancellationToken cancellationToken = default)
     {
         _dbContext.Customers.Add(customer);
@@ -35,6 +51,12 @@ public sealed class CustomerRepository : ICustomerRepository
     public async Task UpdateAsync(Customer customer, CancellationToken cancellationToken = default)
     {
         _dbContext.Customers.Update(customer);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Customer customer, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Customers.Remove(customer);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -2,7 +2,7 @@ using Clientes.Domain.Entities;
 
 namespace Clientes.Application.DTOs;
 
-public sealed record CreateCustomerRequest(
+public sealed record UpdateCustomerRequest(
     string Name,
     string Email,
     string City,

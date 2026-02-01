@@ -16,9 +16,14 @@ public sealed class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CustomerDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<CustomerDto>>> GetAll(
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
     {
-        var customers = await _customerService.GetAllAsync(cancellationToken);
+        var customers = string.IsNullOrWhiteSpace(search)
+            ? await _customerService.GetAllAsync(cancellationToken)
+            : await _customerService.SearchAsync(search, cancellationToken);
+
         return Ok(customers);
     }
 
@@ -39,5 +44,27 @@ public sealed class CustomersController : ControllerBase
     {
         var customer = await _customerService.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<CustomerDto>> Update(
+        Guid id,
+        UpdateCustomerRequest request,
+        CancellationToken cancellationToken)
+    {
+        var customer = await _customerService.UpdateAsync(id, request, cancellationToken);
+        if (customer is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(customer);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var deleted = await _customerService.DeleteAsync(id, cancellationToken);
+        return deleted ? NoContent() : NotFound();
     }
 }

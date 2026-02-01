@@ -1,15 +1,24 @@
+using System.Text.Json.Serialization;
 using Clientes.Application;
 using Clientes.Infrastructure;
+using Clientes.Infrastructure.Data.Seed;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssembly(typeof(Clientes.Application.DependencyInjection).Assembly);
 
 var app = builder.Build();
 
@@ -27,6 +36,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<Clientes.Infrastructure.Data.ClientesDbContext>();
     dbContext.Database.Migrate();
+    await SeedCustomers.SeedAsync(dbContext);
 }
 
 app.Run();
