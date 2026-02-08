@@ -9,15 +9,41 @@ namespace FacturacionElectronica.Infrastructure.Data
     {
         public static async Task Initialize(ApplicationDbContext context)
         {
-            // Verificar si ya hay datos
-            if (await context.Emisores.AnyAsync())
-                return;
+            try
+            {
+                // Verificar si ya hay datos
+                var tieneEmisores = await context.Emisores.AnyAsync();
+                if (tieneEmisores)
+                {
+                    Console.WriteLine("Seed: Ya existen emisores en la base de datos. Saltando seed.");
+                    return;
+                }
 
-            await SeedEmisores(context);
-            await SeedClientes(context);
-            await SeedNumeraciones(context);
-            
-            await context.SaveChangesAsync();
+                Console.WriteLine("Seed: Iniciando carga de datos de prueba...");
+
+                await SeedEmisores(context);
+                Console.WriteLine("Seed: Emisores creados correctamente.");
+
+                await SeedClientes(context);
+                Console.WriteLine("Seed: Clientes creados correctamente.");
+
+                await SeedNumeraciones(context);
+                Console.WriteLine("Seed: Numeraciones creadas correctamente.");
+                
+                var cambios = await context.SaveChangesAsync();
+                Console.WriteLine($"Seed: {cambios} cambios guardados exitosamente.");
+                Console.WriteLine("Seed: Datos de prueba cargados correctamente.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR en Seed: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                throw; // Re-lanzar para que se vea en los logs
+            }
         }
 
         private static async Task SeedEmisores(ApplicationDbContext context)
@@ -38,8 +64,8 @@ namespace FacturacionElectronica.Infrastructure.Data
                     telefono: "6011234567",
                     email: "contacto@empresadeprueba.com"
                 ).WithPaginaWeb("www.empresadeprueba.com"),
-                resolucionHabilitacion: "RES-2024-001234",
-                fechaHabilitacion: new DateTime(2024, 1, 1),
+                resolucionHabilitacion: "RES-2026-001234",
+                fechaHabilitacion: DateTime.UtcNow.Date,
                 softwareId: "SW123456789",
                 pinSoftware: "PIN123456"
             );
@@ -118,14 +144,18 @@ namespace FacturacionElectronica.Infrastructure.Data
         {
             var emisor = await context.Emisores.FirstAsync();
             
+            // Usar fechas actuales para que las numeraciones estén vigentes
+            var fechaInicio = DateTime.UtcNow.Date;
+            var fechaFin = fechaInicio.AddYears(1);
+
             var numeracionFactura = new NumeracionDocumento(
                 prefijo: "SETP",
                 numeroInicial: 1,
                 numeroFinal: 100000,
-                fechaAutorizacion: new DateTime(2024, 1, 1),
-                fechaVencimiento: new DateTime(2024, 12, 31),
+                fechaAutorizacion: fechaInicio,
+                fechaVencimiento: fechaFin,
                 tipoDocumento: TipoDocumento.FacturaElectronica,
-                resolucionAutorizacion: "RES-2024-001234-FACT",
+                resolucionAutorizacion: "RES-2026-001234-FACT",
                 emisorId: emisor.Codigo
             );
 
@@ -133,10 +163,10 @@ namespace FacturacionElectronica.Infrastructure.Data
                 prefijo: "SETP",
                 numeroInicial: 1,
                 numeroFinal: 50000,
-                fechaAutorizacion: new DateTime(2024, 1, 1),
-                fechaVencimiento: new DateTime(2024, 12, 31),
+                fechaAutorizacion: fechaInicio,
+                fechaVencimiento: fechaFin,
                 tipoDocumento: TipoDocumento.NotaCredito,
-                resolucionAutorizacion: "RES-2024-001234-NC",
+                resolucionAutorizacion: "RES-2026-001234-NC",
                 emisorId: emisor.Codigo
             );
 
@@ -144,10 +174,10 @@ namespace FacturacionElectronica.Infrastructure.Data
                 prefijo: "SETP",
                 numeroInicial: 1,
                 numeroFinal: 50000,
-                fechaAutorizacion: new DateTime(2024, 1, 1),
-                fechaVencimiento: new DateTime(2024, 12, 31),
+                fechaAutorizacion: fechaInicio,
+                fechaVencimiento: fechaFin,
                 tipoDocumento: TipoDocumento.NotaDebito,
-                resolucionAutorizacion: "RES-2024-001234-ND",
+                resolucionAutorizacion: "RES-2026-001234-ND",
                 emisorId: emisor.Codigo
             );
 
