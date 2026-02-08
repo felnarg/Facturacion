@@ -35,3 +35,24 @@ appsettings.*.local.json
 
 **/node_modules/
 /zupply.txt
+/Skills/00-Portada-Contenido.md.txt
+/Skills/01-Abreviaturas-Definiciones.md.txt
+/Skills/02-Introduccion-Bases.md
+/Skills/03-Estructura-Invoice.md
+/Skills/04-Reglas-Validacion.md
+/Skills/05-Notas-Credito-Debito.md.txt
+/Skills/06-AttachedDocument-ApplicationResponse.md.txt
+/Skills/07-Transmision-WebServices.md.txt
+/Skills/08-Suplemento-A-Firma-Digital.md.txt
+/Skills/09-Suplemento-B-CUFE-CUDE.md.txt
+/Skills/10-Suplemento-C-Inconvenientes.md.TXT
+/Skills/11-Suplemento-D-Tablas-Codigos.md.txt
+/Skills/12-Suplemento-E-Codigos-Productos.md.txt
+/Skills/13-Suplemento-F-Herramientas-WS.md.txt
+/Skills/14-Suplemento-G-Historico.md.txt
+/Skills/15-Suplemento-H-Reportes.md.txt
+/Skills/16-Suplemento-I-Sectores.md.txt
+/Skills/17-Suplemento-J-Habilitacion.md.txt
+/Skills/18-Suplemento-K-UBLExtensions.md.txt
+/Skills/19-Ejemplos-Flujos-Completos.md.txt
+/Skills/20-Como-diseñar-microservicios

@@ -14,6 +14,7 @@ import {
   getStoredUser,
   getToken,
   isTokenExpired,
+  parseJwt,
   setAuthData,
 } from "@/lib/auth";
 import type { Permission } from "@/lib/permissions";
@@ -44,8 +45,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearAuth();
       setUser({ roles: [], permissions: [] });
     } else {
+      const parsed = parseJwt(token);
+      const mergedRoles =
+        storedUser.roles.length > 0 ? storedUser.roles : parsed.roles ?? [];
+      const mergedPermissions =
+        storedUser.permissions.length > 0
+          ? storedUser.permissions
+          : parsed.permissions ?? [];
+
       setUser({
         ...storedUser,
+        id: storedUser.id ?? parsed.id,
+        email: storedUser.email ?? parsed.email,
+        name: storedUser.name ?? parsed.name,
+        roles: mergedRoles,
+        permissions: mergedPermissions,
         token,
       });
     }
@@ -54,13 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback((response: AuthResponse) => {
     setAuthData(response);
+    const parsed = parseJwt(response.token);
     setUser({
-      id: response.userId,
-      email: response.email,
-      name: response.name,
+      id: response.userId ?? parsed.id,
+      email: response.email ?? parsed.email,
+      name: response.name ?? parsed.name,
       token: response.token,
-      roles: response.roles,
-      permissions: response.permissions,
+      roles: response.roles.length > 0 ? response.roles : parsed.roles ?? [],
+      permissions:
+        response.permissions.length > 0
+          ? response.permissions
+          : parsed.permissions ?? [],
     });
   }, []);
 
