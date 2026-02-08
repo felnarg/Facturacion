@@ -92,7 +92,7 @@ try
     
     // Ejecutar seed de datos
     logger.LogInformation("=== INICIANDO SEED DE DATOS ===");
-    await FacturacionElectronica.Infrastructure.Data.SeedData.Initialize(context);
+    await FacturacionElectronica.Infrastructure.Data.SeedData.Initialize(context, logger);
     logger.LogInformation("=== SEED COMPLETADO ===");
     
     // Verificar datos después del seed

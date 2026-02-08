@@ -62,7 +62,7 @@ namespace FacturacionElectronica.API.Controllers
                 }
 
                 // Ejecutar seed
-                await SeedData.Initialize(_context);
+                await SeedData.Initialize(_context, _logger);
 
                 var emisoresCount = await _context.Emisores.CountAsync();
                 var clientesCount = await _context.Clientes.CountAsync();

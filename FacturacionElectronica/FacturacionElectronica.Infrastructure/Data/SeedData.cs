@@ -2,48 +2,70 @@ using FacturacionElectronica.Domain.Entities;
 using FacturacionElectronica.Domain.Enums;
 using FacturacionElectronica.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FacturacionElectronica.Infrastructure.Data
 {
     public static class SeedData
     {
-        public static async Task Initialize(ApplicationDbContext context)
+        public static async Task Initialize(ApplicationDbContext context, ILogger? logger = null)
         {
             try
             {
                 // Verificar si ya hay datos
                 var tieneEmisores = await context.Emisores.AnyAsync();
+                var tieneClientes = await context.Clientes.AnyAsync();
+                var tieneNumeraciones = await context.NumeracionesDocumentos.AnyAsync();
+                
+                LogMessage(logger, $"Seed: Verificando datos existentes... Emisores: {tieneEmisores}, Clientes: {tieneClientes}, Numeraciones: {tieneNumeraciones}");
+                
                 if (tieneEmisores)
                 {
-                    Console.WriteLine("Seed: Ya existen emisores en la base de datos. Saltando seed.");
+                    LogMessage(logger, "Seed: Ya existen emisores en la base de datos. Saltando seed.");
                     return;
                 }
 
-                Console.WriteLine("Seed: Iniciando carga de datos de prueba...");
+                LogMessage(logger, "Seed: Iniciando carga de datos de prueba...");
 
                 await SeedEmisores(context);
-                Console.WriteLine("Seed: Emisores creados correctamente.");
+                LogMessage(logger, "Seed: Emisores creados correctamente.");
 
                 await SeedClientes(context);
-                Console.WriteLine("Seed: Clientes creados correctamente.");
+                LogMessage(logger, "Seed: Clientes creados correctamente.");
 
                 await SeedNumeraciones(context);
-                Console.WriteLine("Seed: Numeraciones creadas correctamente.");
+                LogMessage(logger, "Seed: Numeraciones creadas correctamente.");
                 
                 var cambios = await context.SaveChangesAsync();
-                Console.WriteLine($"Seed: {cambios} cambios guardados exitosamente.");
-                Console.WriteLine("Seed: Datos de prueba cargados correctamente.");
+                LogMessage(logger, $"Seed: {cambios} cambios guardados exitosamente.");
+                LogMessage(logger, "Seed: Datos de prueba cargados correctamente.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR en Seed: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                LogError(logger, $"ERROR en Seed: {ex.Message}");
+                LogError(logger, $"Stack Trace: {ex.StackTrace}");
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                    LogError(logger, $"Inner Exception: {ex.InnerException.Message}");
                 }
                 throw; // Re-lanzar para que se vea en los logs
             }
+        }
+
+        private static void LogMessage(ILogger? logger, string message)
+        {
+            if (logger != null)
+                logger.LogInformation(message);
+            else
+                Console.WriteLine(message);
+        }
+
+        private static void LogError(ILogger? logger, string message)
+        {
+            if (logger != null)
+                logger.LogError(message);
+            else
+                Console.WriteLine(message);
         }
 
         private static async Task SeedEmisores(ApplicationDbContext context)
@@ -142,7 +164,7 @@ namespace FacturacionElectronica.Infrastructure.Data
 
         private static async Task SeedNumeraciones(ApplicationDbContext context)
         {
-            var emisor = await context.Emisores.FirstAsync();
+            var emisor = await context.Emisores.OrderBy(e => e.Codigo).FirstAsync();
             
             // Usar fechas actuales para que las numeraciones estén vigentes
             var fechaInicio = DateTime.UtcNow.Date;
