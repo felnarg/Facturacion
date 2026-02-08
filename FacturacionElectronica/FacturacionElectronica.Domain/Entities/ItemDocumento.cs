@@ -56,9 +56,9 @@ namespace FacturacionElectronica.Domain.Entities
             var valorTotal = Cantidad * ValorUnitario.Valor;
             ValorTotal = new ValorMonetario(valorTotal, ValorUnitario.Moneda);
             
-            if (Descuento.HasValue)
+            if (Descuento != null)
             {
-                ValorTotal = ValorTotal.Sumar(new ValorMonetario(-Descuento.Value.Valor, Descuento.Value.Moneda));
+                ValorTotal = ValorTotal.Sumar(new ValorMonetario(-Descuento.Valor, Descuento.Moneda));
             }
         }
 

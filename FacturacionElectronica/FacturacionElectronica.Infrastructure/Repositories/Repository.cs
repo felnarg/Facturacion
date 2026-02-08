@@ -1,4 +1,5 @@
 using FacturacionElectronica.Domain.Interfaces;
+using FacturacionElectronica.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 

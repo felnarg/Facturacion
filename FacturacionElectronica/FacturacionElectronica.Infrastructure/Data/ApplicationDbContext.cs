@@ -1,6 +1,7 @@
 using FacturacionElectronica.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Reflection;
 
 namespace FacturacionElectronica.Infrastructure.Data
 {
@@ -62,6 +63,7 @@ namespace FacturacionElectronica.Infrastructure.Data
                 entity.HasMany(e => e.Numeraciones)
                       .WithOne(n => n.Emisor)
                       .HasForeignKey(n => n.EmisorId)
+                      .HasPrincipalKey(e => e.Codigo)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -102,6 +104,7 @@ namespace FacturacionElectronica.Infrastructure.Data
                 entity.HasMany(e => e.Documentos)
                       .WithOne(d => d.Cliente)
                       .HasForeignKey(d => d.ClienteId)
+                      .HasPrincipalKey(c => c.Codigo)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -160,11 +163,13 @@ namespace FacturacionElectronica.Infrastructure.Data
                 entity.HasOne(e => e.Emisor)
                       .WithMany()
                       .HasForeignKey(e => e.EmisorId)
+                      .HasPrincipalKey(e => e.Codigo)
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Cliente)
                       .WithMany(c => c.Documentos)
                       .HasForeignKey(e => e.ClienteId)
+                      .HasPrincipalKey(c => c.Codigo)
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasMany(e => e.Items)
@@ -301,7 +306,12 @@ namespace FacturacionElectronica.Infrastructure.Data
 
             foreach (var entry in entries)
             {
-                entry.Entity.ActualizarFechaModificacion();
+                // Actualizar fecha de modificación directamente usando reflexión o propiedad
+                var fechaModificacionProperty = entry.Entity.GetType().GetProperty("FechaModificacion");
+                if (fechaModificacionProperty != null)
+                {
+                    fechaModificacionProperty.SetValue(entry.Entity, DateTime.UtcNow);
+                }
             }
 
             return await base.SaveChangesAsync(cancellationToken);

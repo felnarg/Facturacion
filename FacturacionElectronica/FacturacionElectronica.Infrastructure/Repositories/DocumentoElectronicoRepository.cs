@@ -1,6 +1,7 @@
 using FacturacionElectronica.Domain.Entities;
 using FacturacionElectronica.Domain.Enums;
 using FacturacionElectronica.Domain.Interfaces;
+using FacturacionElectronica.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace FacturacionElectronica.Infrastructure.Repositories

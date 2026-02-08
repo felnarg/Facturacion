@@ -1,0 +1,8 @@
+{
+  "DbContexts": {
+    "ApplicationDbContext": {
+      "ConnectionString": "Data Source=localhost,14331;Initial Catalog=FacturacionElectronica;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True",
+      "DatabaseProvider": "SqlServer"
+    }
+  }
+}

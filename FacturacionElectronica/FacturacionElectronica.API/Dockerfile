@@ -3,18 +3,18 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copiar archivos de proyecto y restaurar dependencias
-COPY ["FacturacionElectronica.API/FacturacionElectronica.API.csproj", "FacturacionElectronica.API/"]
-COPY ["FacturacionElectronica.Application/FacturacionElectronica.Application.csproj", "FacturacionElectronica.Application/"]
-COPY ["FacturacionElectronica.Domain/FacturacionElectronica.Domain.csproj", "FacturacionElectronica.Domain/"]
-COPY ["FacturacionElectronica.Infrastructure/FacturacionElectronica.Infrastructure.csproj", "FacturacionElectronica.Infrastructure/"]
+COPY ["FacturacionElectronica/FacturacionElectronica.API/FacturacionElectronica.API.csproj", "FacturacionElectronica/FacturacionElectronica.API/"]
+COPY ["FacturacionElectronica/FacturacionElectronica.Application/FacturacionElectronica.Application.csproj", "FacturacionElectronica/FacturacionElectronica.Application/"]
+COPY ["FacturacionElectronica/FacturacionElectronica.Domain/FacturacionElectronica.Domain.csproj", "FacturacionElectronica/FacturacionElectronica.Domain/"]
+COPY ["FacturacionElectronica/FacturacionElectronica.Infrastructure/FacturacionElectronica.Infrastructure.csproj", "FacturacionElectronica/FacturacionElectronica.Infrastructure/"]
 
-RUN dotnet restore "FacturacionElectronica.API/FacturacionElectronica.API.csproj"
+RUN dotnet restore "FacturacionElectronica/FacturacionElectronica.API/FacturacionElectronica.API.csproj"
 
-# Copiar todo el código fuente
-COPY . .
+# Copiar todo el código fuente del microservicio
+COPY ["FacturacionElectronica/", "FacturacionElectronica/"]
 
 # Publicar la aplicación
-WORKDIR "/src/FacturacionElectronica.API"
+WORKDIR "/src/FacturacionElectronica/FacturacionElectronica.API"
 RUN dotnet publish "FacturacionElectronica.API.csproj" -c Release -o /app/publish
 
 # Etapa de ejecución
