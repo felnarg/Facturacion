@@ -171,6 +171,28 @@ services:
     networks:
       - supermercado-network
 
+  facturacion-electronica-api:
+    image: facturacion-electronica-api-img
+    build:
+      context: .
+      dockerfile: FacturacionElectronica/FacturacionElectronica.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=FacturacionElectronica;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+      - RabbitMQ__Queue=facturacion.electronica.events
+    ports:
+      - "8087:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+    networks:
+      - supermercado-network
+
   gateway:
     image: apigateway-img
     build:
@@ -188,6 +210,7 @@ services:
       - clientes-api
       - kardex-api
       - usuarios-api
+      - facturacion-electronica-api
     networks:
       - supermercado-network
 
