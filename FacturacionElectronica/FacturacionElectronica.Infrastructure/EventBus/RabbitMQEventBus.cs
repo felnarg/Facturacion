@@ -30,7 +30,9 @@ namespace FacturacionElectronica.Infrastructure.EventBus
                 HostName = hostName,
                 UserName = userName,
                 Password = password,
-                DispatchConsumersAsync = true
+                // Para este bus usamos consumidor síncrono (EventingBasicConsumer),
+                // por lo que no debemos habilitar el modo async en la fábrica.
+                DispatchConsumersAsync = false
             };
 
             _connection = factory.CreateConnection();

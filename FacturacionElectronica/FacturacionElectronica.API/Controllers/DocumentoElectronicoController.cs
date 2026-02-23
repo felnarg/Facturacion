@@ -6,6 +6,7 @@ using FacturacionElectronica.Domain.ValueObjects;
 using FacturacionElectronica.Infrastructure.EventBus;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
@@ -27,6 +28,7 @@ public class DocumentoElectronicoController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IEventBus _eventBus;
     private readonly ILogger<DocumentoElectronicoController> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public DocumentoElectronicoController(
         IDocumentoElectronicoRepository documentoRepository,
@@ -39,7 +41,8 @@ public class DocumentoElectronicoController : ControllerBase
         IDianSoapService dianSoap,
         IConfiguration configuration,
         IEventBus eventBus,
-        ILogger<DocumentoElectronicoController> logger)
+        ILogger<DocumentoElectronicoController> logger,
+        IServiceScopeFactory scopeFactory)
     {
         _documentoRepository = documentoRepository;
         _emisorRepository    = emisorRepository;
@@ -52,6 +55,7 @@ public class DocumentoElectronicoController : ControllerBase
         _configuration       = configuration;
         _eventBus            = eventBus;
         _logger              = logger;
+        _scopeFactory        = scopeFactory;
     }
 
     // ── GET /api/documentoselectronicos/health ────────────────────────────────────
@@ -161,13 +165,37 @@ public class DocumentoElectronicoController : ControllerBase
                     resultadoFirma.XmlFirmado, numeroDocumento, emisor.Codigo, esAmbientePruebas);
             }
 
-            documento.MarcarComoTransmitido(DateTime.UtcNow);
-            documento.ProcesarRespuestaDian(
-                respuestaDian.Descripcion,
-                respuestaDian.Aceptado,
-                respuestaDian.FechaRespuesta);
+            // Actualizar estado y respuesta DIAN en un scope nuevo para reducir riesgos de DbUpdateConcurrencyException
+            // (los nuevos eventos se insertan en un contexto limpio en lugar de mezclar Added/Modified en el mismo contexto)
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var repo = scope.ServiceProvider.GetRequiredService<IDocumentoElectronicoRepository>();
+                var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var doc = await repo.GetWithAllAsync(documento.Id);
+                if (doc != null)
+                {
+                    try
+                    {
+                        doc.MarcarComoTransmitido(DateTime.UtcNow);
+                        doc.ProcesarRespuestaDian(
+                            respuestaDian.Descripcion,
+                            respuestaDian.Aceptado,
+                            respuestaDian.FechaRespuesta);
+                        await uow.SaveChangesAsync();
+                    }
+                    catch (DbUpdateConcurrencyException ex)
+                    {
+                        // No bloqueamos la creación del documento si solo falla la actualización de eventos/estado
+                        _logger.LogWarning(ex,
+                            "DbUpdateConcurrencyException al actualizar estado/respuesta DIAN para documento {DocumentoId}",
+                            documento.Id);
+                    }
+                }
+            }
 
-            await _unitOfWork.SaveChangesAsync();
+            // Recargar documento actualizado para respuesta y evento
+            documento = await _documentoRepository.GetWithAllAsync(documento.Id)
+                ?? documento;
 
             // ── 7. Publicar evento a Notificaciones via RabbitMQ ─────────────────
             var evento = new Facturacion.Shared.Events.FacturaTransmitidaDian(

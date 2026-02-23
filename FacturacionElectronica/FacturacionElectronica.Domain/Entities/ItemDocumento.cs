@@ -8,13 +8,13 @@ namespace FacturacionElectronica.Domain.Entities
         public int Orden { get; private set; }
         public string Codigo { get; private set; }
         public string Descripcion { get; private set; }
-        public string CodigoEstandar { get; private set; } // CCE, GTIN, etc.
+        public string CodigoEstandar { get; private set; } = string.Empty; // CCE, GTIN, etc.
         public decimal Cantidad { get; private set; }
         public UnidadMedida UnidadMedida { get; private set; }
         public ValorMonetario ValorUnitario { get; private set; }
         public ValorMonetario ValorTotal { get; private set; }
         public ValorMonetario? Descuento { get; private set; }
-        public string Observaciones { get; private set; }
+        public string Observaciones { get; private set; } = string.Empty;
         
         // Foreign Key
         public Guid DocumentoId { get; private set; }

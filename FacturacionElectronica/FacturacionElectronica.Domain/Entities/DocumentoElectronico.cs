@@ -11,12 +11,12 @@ namespace FacturacionElectronica.Domain.Entities
         public DateTime FechaEmision { get; private set; }
         public DateTime FechaVencimiento { get; private set; }
         public DateTime? FechaEntrega { get; private set; }
-        public string Observaciones { get; private set; }
-        public string Cufe { get; private set; }
-        public string QrCode { get; private set; }
-        public string XmlContent { get; private set; }
-        public string XmlFirmado { get; private set; }
-        public string RespuestaDian { get; private set; }
+        public string Observaciones { get; private set; } = string.Empty;
+        public string Cufe { get; private set; } = string.Empty;
+        public string QrCode { get; private set; } = string.Empty;
+        public string XmlContent { get; private set; } = string.Empty;
+        public string XmlFirmado { get; private set; } = string.Empty;
+        public string RespuestaDian { get; private set; } = string.Empty;
         public DateTime? FechaTransmision { get; private set; }
         public DateTime? FechaRespuesta { get; private set; }
         
@@ -150,9 +150,9 @@ namespace FacturacionElectronica.Domain.Entities
                 throw new InvalidOperationException("Solo documentos generados pueden ser firmados");
 
             XmlFirmado = xmlFirmado;
-            Cufe = cufe;
+            Cufe = string.IsNullOrWhiteSpace(cufe) ? string.Empty : cufe;
             Estado = EstadoDocumento.Firmado;
-            AgregarEvento("Documento firmado", $"CUFE generado: {cufe}");
+            AgregarEvento("Documento firmado", $"CUFE generado: {Cufe}");
         }
 
         public void MarcarComoTransmitido(DateTime fechaTransmision)

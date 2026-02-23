@@ -7,11 +7,12 @@ COPY ["FacturacionElectronica/FacturacionElectronica.API/FacturacionElectronica.
 COPY ["FacturacionElectronica/FacturacionElectronica.Application/FacturacionElectronica.Application.csproj", "FacturacionElectronica/FacturacionElectronica.Application/"]
 COPY ["FacturacionElectronica/FacturacionElectronica.Domain/FacturacionElectronica.Domain.csproj", "FacturacionElectronica/FacturacionElectronica.Domain/"]
 COPY ["FacturacionElectronica/FacturacionElectronica.Infrastructure/FacturacionElectronica.Infrastructure.csproj", "FacturacionElectronica/FacturacionElectronica.Infrastructure/"]
+COPY ["Shared/Facturacion.Shared/Facturacion.Shared.csproj", "Shared/Facturacion.Shared/"]
 
 RUN dotnet restore "FacturacionElectronica/FacturacionElectronica.API/FacturacionElectronica.API.csproj"
 
-# Copiar todo el código fuente del microservicio
-COPY ["FacturacionElectronica/", "FacturacionElectronica/"]
+# Copiar todo el código fuente necesario para compilar (incluye Shared)
+COPY . .
 
 # Publicar la aplicación
 WORKDIR "/src/FacturacionElectronica/FacturacionElectronica.API"

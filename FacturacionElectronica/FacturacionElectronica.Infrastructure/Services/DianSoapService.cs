@@ -126,7 +126,10 @@ public sealed class DianSoapService : IDianSoapService
     {
         try
         {
+            // WCF basicHttpBinding (SOAP 1.1) espera text/xml; charset=utf-8 y SOAPAction
             var content = new StringContent(envelope, Encoding.UTF8, "text/xml");
+            if (content.Headers.ContentType != null)
+                content.Headers.ContentType.CharSet = "utf-8";
             content.Headers.Add("SOAPAction", $"\"{soapAction}\"");
 
             using var response = await _httpClient.PostAsync(url, content);

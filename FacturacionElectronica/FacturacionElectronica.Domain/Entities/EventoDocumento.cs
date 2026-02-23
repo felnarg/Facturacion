@@ -4,7 +4,7 @@ namespace FacturacionElectronica.Domain.Entities
     {
         public string TipoEvento { get; private set; }
         public string Descripcion { get; private set; }
-        public string Detalles { get; private set; }
+        public string Detalles { get; private set; } = string.Empty;
         public string Usuario { get; private set; }
         
         // Foreign Key
