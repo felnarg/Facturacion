@@ -32,14 +32,14 @@ builder.Services.AddScoped<IXmlGeneratorService, XmlGeneratorService>();
 builder.Services.AddScoped<IFirmaDigitalService, FirmaDigitalService>();
 builder.Services.AddScoped<IDianSoapService, DianSoapService>();
 
-// HttpClient para DIAN con timeout configurable
+// HttpClient para DIAN con timeout y descompresión automática (gzip/deflate)
 builder.Services.AddHttpClient("DianSoap", client =>
 {
     var timeout = builder.Configuration.GetValue<int>("Dian:TimeoutSegundos", 120);
     client.Timeout = TimeSpan.FromSeconds(timeout);
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
-    // En desarrollo permite certificados autofirmados
+    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate,
     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
 
@@ -77,7 +77,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Redirigir a HTTPS solo si el puerto HTTPS está configurado (evita warning en Docker/sin HTTPS)
+if (builder.Configuration["ASPNETCORE_HTTPS_PORT"] != null
+    || builder.Configuration["Kestrel:Endpoints:Https:Url"] != null)
+    app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();

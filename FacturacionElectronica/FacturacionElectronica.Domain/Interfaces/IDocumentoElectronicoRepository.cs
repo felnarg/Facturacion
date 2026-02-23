@@ -12,6 +12,8 @@ namespace FacturacionElectronica.Domain.Interfaces
         Task<IEnumerable<DocumentoElectronico>> GetByTipoAsync(TipoDocumento tipo, DateTime? fechaInicio = null, DateTime? fechaFin = null);
         Task<DocumentoElectronico> GetWithItemsAsync(Guid id);
         Task<DocumentoElectronico> GetWithAllAsync(Guid id);
+        Task ActualizarEstadoTransmisionDianAsync(Guid documentoId, EstadoDocumento estado, DateTime fechaTransmision, DateTime fechaRespuesta, string respuestaDian, bool aceptado);
+        void ReloadWithEventos(DocumentoElectronico documento);
         Task<bool> ExisteNumeroDocumentoAsync(string numeroDocumento);
         Task<IEnumerable<DocumentoElectronico>> GetPendientesTransmisionAsync();
         Task<IEnumerable<DocumentoElectronico>> GetVencidosAsync();

@@ -2,6 +2,7 @@ using FacturacionElectronica.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -126,11 +127,14 @@ public sealed class DianSoapService : IDianSoapService
     {
         try
         {
-            // WCF basicHttpBinding (SOAP 1.1) espera text/xml; charset=utf-8 y SOAPAction
-            var content = new StringContent(envelope, Encoding.UTF8, "text/xml");
+            // La DIAN expone WcfDianCustomerServices con wsHttpBinding (SOAP 1.2 + WS-Security).
+            // A nivel de HTTP, el binding espera application/soap+xml; charset=utf-8 y la acción como parámetro.
+            var content = new StringContent(envelope, Encoding.UTF8, "application/soap+xml");
             if (content.Headers.ContentType != null)
+            {
                 content.Headers.ContentType.CharSet = "utf-8";
-            content.Headers.Add("SOAPAction", $"\"{soapAction}\"");
+                content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("action", $"\"{soapAction}\""));
+            }
 
             using var response = await _httpClient.PostAsync(url, content);
             var responseXml = await response.Content.ReadAsStringAsync();
@@ -139,10 +143,18 @@ public sealed class DianSoapService : IDianSoapService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("[DIAN] Error HTTP {Status} al llamar {Operacion}", response.StatusCode, operacion);
-                return new RespuestaDianWs(false, "HTTP_ERROR",
-                    $"Error HTTP {(int)response.StatusCode}: {response.ReasonPhrase}",
-                    null, null, DateTime.UtcNow);
+                var bodyPreview = string.IsNullOrEmpty(responseXml)
+                    ? "(cuerpo vacío)"
+                    : responseXml.Length > 2000 ? responseXml[..2000] + "..." : responseXml;
+                _logger.LogError("[DIAN] Error HTTP {Status} al llamar {Operacion}. Respuesta: {Body}",
+                    response.StatusCode, operacion, bodyPreview);
+                var faultMsg = ExtraerMensajeSoapFault(responseXml);
+                var descripcion = string.IsNullOrWhiteSpace(responseXml)
+                    ? $"Error HTTP {(int)response.StatusCode}: {response.ReasonPhrase}"
+                    : faultMsg != null
+                        ? $"Error HTTP {(int)response.StatusCode}: {faultMsg}"
+                        : $"Error HTTP {(int)response.StatusCode}: {response.ReasonPhrase}. Respuesta: {(responseXml.Length > 800 ? responseXml[..800] + "..." : responseXml)}";
+                return new RespuestaDianWs(false, "HTTP_ERROR", descripcion, null, null, DateTime.UtcNow);
             }
 
             return ParsarRespuestaDian(responseXml, operacion);
@@ -234,5 +246,24 @@ public sealed class DianSoapService : IDianSoapService
         }
         ms.Seek(0, SeekOrigin.Begin);
         return Convert.ToBase64String(ms.ToArray());
+    }
+
+    /// <summary>
+    /// Extrae el mensaje de un SOAP Fault (1.1 faultstring o 1.2 Reason/Text) para mostrar en respuesta.
+    /// </summary>
+    private static string? ExtraerMensajeSoapFault(string responseXml)
+    {
+        if (string.IsNullOrWhiteSpace(responseXml) || !responseXml.TrimStart().StartsWith("<")) return null;
+        try
+        {
+            var doc = XDocument.Parse(responseXml);
+            var fault11 = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "faultstring");
+            if (!string.IsNullOrWhiteSpace(fault11?.Value)) return fault11.Value.Trim();
+            var reason = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "Reason");
+            var text = reason?.Elements().FirstOrDefault(e => e.Name.LocalName == "Text")?.Value;
+            if (!string.IsNullOrWhiteSpace(text)) return text.Trim();
+        }
+        catch { /* ignorar */ }
+        return null;
     }
 }
