@@ -24,9 +24,11 @@ namespace FacturacionElectronica.Domain.ValueObjects
                 throw new ArgumentException("El país es requerido");
 
             Calle = calle;
-            Numero = numero;
+            Numero = numero ?? "";
             Ciudad = ciudad;
             Departamento = departamento;
+            CodigoPostal = "";
+            Complemento = "";
             Pais = pais;
         }
 
@@ -65,6 +67,7 @@ namespace FacturacionElectronica.Domain.ValueObjects
 
             Telefono = telefono;
             Email = email;
+            PaginaWeb = "";
         }
 
         public InformacionContacto WithPaginaWeb(string paginaWeb)

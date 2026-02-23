@@ -1,6 +1,8 @@
 using FacturacionElectronica.Domain.Interfaces;
 using FacturacionElectronica.Infrastructure.Data;
+using FacturacionElectronica.Infrastructure.EventBus;
 using FacturacionElectronica.Infrastructure.Repositories;
+using FacturacionElectronica.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -24,6 +26,35 @@ builder.Services.AddScoped<IEmisorRepository, EmisorRepository>();
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<INumeracionDocumentoRepository, NumeracionDocumentoRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Servicios de Facturación Electrónica DIAN
+builder.Services.AddScoped<IXmlGeneratorService, XmlGeneratorService>();
+builder.Services.AddScoped<IFirmaDigitalService, FirmaDigitalService>();
+builder.Services.AddScoped<IDianSoapService, DianSoapService>();
+
+// HttpClient para DIAN con timeout configurable
+builder.Services.AddHttpClient("DianSoap", client =>
+{
+    var timeout = builder.Configuration.GetValue<int>("Dian:TimeoutSegundos", 120);
+    client.Timeout = TimeSpan.FromSeconds(timeout);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    // En desarrollo permite certificados autofirmados
+    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+});
+
+// EventBus (RabbitMQ) para publicar eventos a Notificaciones
+builder.Services.AddSingleton<IEventBus>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new RabbitMQEventBus(
+        hostName:     config["RabbitMQ:HostName"]  ?? "rabbitmq",
+        userName:     config["RabbitMQ:UserName"]  ?? "admin",
+        password:     config["RabbitMQ:Password"]  ?? "p@ssword123",
+        exchangeName: config["RabbitMQ:Exchange"]  ?? "facturacion.events",
+        queueName:    config["RabbitMQ:Queue"]     ?? "facturacion.electronica.events"
+    );
+});
 
 // Add CORS
 builder.Services.AddCors(options =>

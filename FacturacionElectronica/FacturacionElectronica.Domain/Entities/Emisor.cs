@@ -49,6 +49,10 @@ namespace FacturacionElectronica.Domain.Entities
                 throw new ArgumentException("El PIN del software es requerido");
 
             RazonSocial = razonSocial;
+            NombreComercial = "";
+            RegistroMercantil = "";
+            CertificadoDigital = "";
+            ClaveCertificado = "";
             TipoPersona = tipoPersona;
             ResponsabilidadFiscal = responsabilidadFiscal;
             Direccion = direccion ?? throw new ArgumentNullException(nameof(direccion));

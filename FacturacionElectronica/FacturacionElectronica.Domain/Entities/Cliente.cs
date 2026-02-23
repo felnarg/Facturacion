@@ -37,6 +37,8 @@ namespace FacturacionElectronica.Domain.Entities
                 throw new ArgumentException("La razón social es requerida");
 
             RazonSocial = razonSocial;
+            NombreComercial = "";
+            RegistroMercantil = "";
             TipoPersona = tipoPersona;
             ResponsabilidadFiscal = responsabilidadFiscal;
             Direccion = direccion ?? throw new ArgumentNullException(nameof(direccion));
@@ -44,8 +46,9 @@ namespace FacturacionElectronica.Domain.Entities
 
             // Valores por defecto para Colombia
             CodigoPais = "CO";
-            CodigoDepartamento = "11"; // Bogotá por defecto
-            CodigoCiudad = "11001"; // Bogotá por defecto
+            CodigoDepartamento = "11";
+            CodigoCiudad = "11001";
+            CodigoPostal = "110111";
 
             ActualizarFechaModificacion();
         }

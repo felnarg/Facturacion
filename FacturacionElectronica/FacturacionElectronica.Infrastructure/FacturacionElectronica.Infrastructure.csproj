@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FacturacionElectronica.Application\FacturacionElectronica.Application.csproj" />
     <ProjectReference Include="..\FacturacionElectronica.Domain\FacturacionElectronica.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\Facturacion.Shared\Facturacion.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,9 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
   </ItemGroup>
 
 </Project>

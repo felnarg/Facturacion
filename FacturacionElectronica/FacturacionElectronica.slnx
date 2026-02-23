@@ -1,2 +1,8 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="FacturacionElectronica.Domain\FacturacionElectronica.Domain.csproj" />
+    <Project Path="FacturacionElectronica.Application\FacturacionElectronica.Application.csproj" />
+    <Project Path="FacturacionElectronica.Infrastructure\FacturacionElectronica.Infrastructure.csproj" />
+    <Project Path="FacturacionElectronica.API\FacturacionElectronica.API.csproj" />
+  </Folder>
 </Solution>

@@ -211,6 +211,47 @@ services:
       - kardex-api
       - usuarios-api
       - facturacion-electronica-api
+      - notificaciones-api
+    networks:
+      - supermercado-network
+
+  # ── MailHog: Servidor SMTP de desarrollo para ver emails sin enviarlos ──────
+  mailhog:
+    image: mailhog/mailhog
+    container_name: supermercado-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # UI web para ver los emails
+    networks:
+      - supermercado-network
+
+  # ── Notificaciones Microservice ──────────────────────────────────────────────
+  notificaciones-api:
+    image: notificaciones-api-img
+    container_name: supermercado-notificaciones-api
+    build:
+      context: .
+      dockerfile: Notificaciones/Notificaciones.API/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=sqlserver,1433;Initial Catalog=Notificaciones;User ID=sa;Password=Passw0rd!;Encrypt=True;TrustServerCertificate=True
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=p@ssword123
+      - RabbitMQ__Exchange=facturacion.events
+      - RabbitMQ__Queue=notificaciones.events
+      - Email__SmtpHost=mailhog
+      - Email__SmtpPort=1025
+      - Email__UseSsl=false
+      - Email__RemitenteEmail=facturacion@empresa.com
+      - Email__RemitenteName=Sistema de Facturación Electrónica
+    ports:
+      - "8088:80"
+    depends_on:
+      - rabbitmq
+      - sqlserver
+      - mailhog
     networks:
       - supermercado-network
 
